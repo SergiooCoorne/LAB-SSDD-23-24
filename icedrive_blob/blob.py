@@ -4,19 +4,34 @@ import Ice
 
 import IceDrive
 
+import time
 
 class User(IceDrive.User):
     """Implementation of an IceDrive.User interface."""
 
+    def __init__(self, username: str, password: str):
+        """Create a new User object."""
+
+        #Le ponemos el atributo timeAlive para saber cuando se ha creado
+        timeAlive = time.time()
+
     def getUsername(self, current: Ice.Current = None) -> str:
         """Return the username for the User object."""
+
+        return User.username #Devuelve el nombre de usuario
 
     def isAlive(self, current: Ice.Current = None) -> bool:
         """Check if the authentication is still valid or not."""
 
+        if User.timeAlive > 120: #Si se ha creado hace mas de 2 minutos
+            return False
+        else: #Si se ha creado hace menos de 2 minutos
+            return True
+
     def refresh(self, current: Ice.Current = None) -> None:
         """Renew the authentication for 1 more period of time."""
 
+        User.timeAlive = time.time() #Volvemos a poner el tiempo a 0
 
 class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""

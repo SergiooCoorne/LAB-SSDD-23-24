@@ -22,6 +22,7 @@
   // *** SERVICES *** //
 
   // Authentication Service
+  
   interface User {
     string getUsername();
     bool isAlive();
