@@ -4,37 +4,14 @@ import Ice
 
 import IceDrive
 
-import time
+class DataTransfer(IceDrive.DataTransfer):
+    """Implementation of an IceDrive.DataTransfer interface."""
 
-class User(IceDrive.User):
-    """Implementation of an IceDrive.User interface."""
+    def read(self, size: int, current: Ice.Current = None) -> bytes:
+        """Returns a list of bytes from the opened file."""
 
-    def __init__(self, username: str, password: str):
-        """Create a new User object."""
-
-        #Le ponemos el atributo timeAlive para saber cuando se ha creado
-        creation_time = time.time()
-        self.username = username
-        self.password = password
-        print("Vida del objeto " + self.username + " :" + creation_time + " segundos\n")
-        
-    def getUsername(self, current: Ice.Current = None) -> str:
-        """Return the username for the User object."""
-
-        return User.username #Devuelve el nombre de usuario
-
-    def isAlive(self, current: Ice.Current = None) -> bool:
-        """Check if the authentication is still valid or not."""
-
-        if User.creation_time - time.time() > 120: #Si se ha creado hace mas de 2 minutos
-            return False
-        else: #Si se ha creado hace menos de 2 minutos
-            return True
-
-    def refresh(self, current: Ice.Current = None) -> None:
-        """Renew the authentication for 1 more period of time."""
-
-        User.creation_time = time.time() #Volvemos a poner el tiempo a 0
+    def close(self, current: Ice.Current = None) -> None:
+        """Close the currently opened file."""
 
 class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""
