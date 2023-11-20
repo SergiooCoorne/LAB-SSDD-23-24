@@ -5,4 +5,4 @@ jobs: #Definimos los trabajos que queremos que se ejecuten
     runs-on: ubuntu-latest #El sistema operativo en el que se ejecutará el trabajo
     steps: 
       - uses: actions/checkout@v3 #Clonar el repositorio en el entorno de ejecución del flujo de trabajo 
-      - uses: chartboost/ruff-action@v1 
+      - uses: chartboost/ruff-action@v1 #Comprueba que se siguen las reglas de estilo de Ruff
