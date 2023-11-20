@@ -13,10 +13,10 @@ class User(IceDrive.User):
         """Create a new User object."""
 
         #Le ponemos el atributo timeAlive para saber cuando se ha creado
-        timeAlive = time.time()
+        creation_time = time.time()
         self.username = username
         self.password = password
-        print("Vida del objeto " + self.username + " :" + timeAlive + " segundos\n")
+        print("Vida del objeto " + self.username + " :" + creation_time + " segundos\n")
         
     def getUsername(self, current: Ice.Current = None) -> str:
         """Return the username for the User object."""
@@ -26,7 +26,7 @@ class User(IceDrive.User):
     def isAlive(self, current: Ice.Current = None) -> bool:
         """Check if the authentication is still valid or not."""
 
-        if User.timeAlive > 120: #Si se ha creado hace mas de 2 minutos
+        if User.creation_time - time.time() > 120: #Si se ha creado hace mas de 2 minutos
             return False
         else: #Si se ha creado hace menos de 2 minutos
             return True
@@ -34,7 +34,7 @@ class User(IceDrive.User):
     def refresh(self, current: Ice.Current = None) -> None:
         """Renew the authentication for 1 more period of time."""
 
-        User.timeAlive = time.time() #Volvemos a poner el tiempo a 0
+        User.creation_time = time.time() #Volvemos a poner el tiempo a 0
 
 class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""
