@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "icedrive-blob"
 version = "0.0.1"
 authors = [
-  { name="Put Your name Here", email="youremailaddress@uclm.es" },
+  { name="Sergio Cornejo, email="Sergio.Cornejo@alu.uclm.es" },
 ]
 description = "Implementation of IceDrive Authentication service"
 readme = "README.md"
@@ -26,7 +26,7 @@ tests = ["pytest"]
 linters = ["black", "ruff", "pydocstyle"]
 
 [project.urls]
-"Homepage" = "https://github.com/YOURUSERNAME/YOURREPOSITORY"
+"Homepage" = "https://github.com/SergiooCoorne/LAB-SSDD-23-24"
 
 [project.scripts]
 icedrive-blob = "icedrive_blob.app:main"
