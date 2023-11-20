@@ -14,9 +14,9 @@ class User(IceDrive.User):
 
         #Le ponemos el atributo timeAlive para saber cuando se ha creado
         timeAlive = time.time()
-        print("Vida del objeto " + User.name + " :" + timeAlive + " segundos\n")
         self.username = username
         self.password = password
+        print("Vida del objeto " + self.username + " :" + timeAlive + " segundos\n")
         
     def getUsername(self, current: Ice.Current = None) -> str:
         """Return the username for the User object."""
