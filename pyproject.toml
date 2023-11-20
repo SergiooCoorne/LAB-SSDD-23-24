@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "icedrive-blob"
 version = "0.0.1"
 authors = [
-  { name="Sergio Cornejo, email="Sergio.Cornejo@alu.uclm.es" },
+  { name="Sergio Cornejo", email="Sergio.Cornejo@alu.uclm.es" },
 ]
 description = "Implementation of IceDrive Authentication service"
 readme = "README.md"
