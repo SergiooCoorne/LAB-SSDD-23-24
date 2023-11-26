@@ -35,15 +35,6 @@ class DataTransfer:
             self.f = None #Para asegurarnos de que el archivo se ha cerrado
         return None        
 
-    @staticmethod
-    def is_hash_present(file_path: str, target_hash: str) -> bool:
-        """Check if a hash is already present in a file."""
-        if not os.path.exists(file_path):
-            return False
-
-        with open(file_path, 'r') as f:
-            return any(line.strip() == target_hash for line in f)
-
 
 
 

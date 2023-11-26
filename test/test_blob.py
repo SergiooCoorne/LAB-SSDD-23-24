@@ -36,7 +36,6 @@ def test_close(setup_data_transfer):
     assert setup_data_transfer.f is None
 
 
-
 def is_hash_present(file_path: str, target_hash: str) -> bool:
     """Check if a hash is already present in a file."""
     if not os.path.exists(file_path):
