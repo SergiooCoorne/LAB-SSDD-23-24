@@ -36,7 +36,7 @@ def test_close(setup_data_transfer):
     assert setup_data_transfer.f is None
 
 
-@staticmethod
+
 def is_hash_present(file_path: str, target_hash: str) -> bool:
     """Check if a hash is already present in a file."""
     if not os.path.exists(file_path):
@@ -45,7 +45,7 @@ def is_hash_present(file_path: str, target_hash: str) -> bool:
     with open(file_path, 'r') as f:
         return any(line.strip() == target_hash for line in f)
     
-@staticmethod
+
 def is_text_present(file_path: str, target_text: str) -> bool:
     """Check if a text is already present in a file."""
     if not os.path.exists(file_path):
