@@ -5,7 +5,7 @@ import pytest
 @pytest.fixture #Fixture para crear un archivo de prueba
 def setup_data_transfer():
     # Crear un archivo de prueba con contenido
-    text = 'Prueba 3'
+    text = 'Prueba para git'
     with open('test_file.txt', 'w') as test_file:
         test_file.write(text)
 
