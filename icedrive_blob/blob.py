@@ -34,10 +34,11 @@ class DataTransfer(IceDrive.DataTransfer):
             content_list.append(chunck)
             return content_list
 
-    def close(self, current = None):
+    def close(self, current = None) -> None:
         """Close the currently opened file."""
         if self.f:
-            self.f.close() 
+            self.f.close()
+            return None 
 
     @staticmethod
     def is_hash_present(file_path: str, target_hash: str) -> bool:
