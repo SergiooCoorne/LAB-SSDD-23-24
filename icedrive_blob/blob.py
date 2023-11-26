@@ -8,18 +8,20 @@ import os
 class DataTransfer(IceDrive.DataTransfer):
     """Implementation of an IceDrive.DataTransfer interface."""
 
-    def __init__(self, file_path: str, ) -> IceDrive.DataTransfer:
+    def __init__(self, file_path: str):
         """Initialize the DataTransfer object."""
         self.file_path = file_path
+        self.size_file = os.path.getsize(file_path)
 
-        with open(file_path, "rb") as f:
-            self.file_content = f.read()
-        
-        self.sumSHA256 = hashlib.sha256(self.file_content).hexdigest()
-        
-        with open('blobs.txt', 'w') as f:
-            f.write(self.sumSHA256)
-            f.write('\n')
+        self.f = open(file_path, "rb")
+        self.file_content = self.f.read() #Ya se estan leyendo en bytes, con lo que no haria falta aplicar encode('utf-8')
+
+        self.sumSHA256 = hashlib.sha256(self.file_content).hexdigest() #Realiza el hash del contenido del archivo
+
+        if not self.is_hash_present('blobs.txt', self.sumSHA256):
+            with open('blobs.txt', 'a') as f:
+                f.write(self.sumSHA256)
+                f.write('\n')
 
     def read(self, size: int, current: Ice.Current = None) -> bytes:
         """Returns a list of bytes from the opened file."""
@@ -32,9 +34,10 @@ class DataTransfer(IceDrive.DataTransfer):
             content_list.append(chunck)
             return content_list
 
-    def close(self, current: Ice.Current = None) -> None:
+    def close(self, current = None):
         """Close the currently opened file."""
-        self = None
+        if self.f:
+            self.f.close() 
 
     @staticmethod
     def is_hash_present(file_path: str, target_hash: str) -> bool:
