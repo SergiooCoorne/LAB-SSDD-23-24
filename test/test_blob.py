@@ -27,7 +27,7 @@ def setup_data_transfer():
 def test_read(setup_data_transfer):
     # Probar la función read para leer el contenido del archivo
     content = setup_data_transfer.read(10)
-    assert content != None
+    assert content is not None
 
 def test_close(setup_data_transfer):
     # Probar la función close para cerrar el archivo
