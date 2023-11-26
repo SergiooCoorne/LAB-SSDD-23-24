@@ -6,3 +6,25 @@ jobs: #Definimos los trabajos que queremos que se ejecuten
     steps: 
       - uses: actions/checkout@v3 #Clonar el repositorio en el entorno de ejecución del flujo de trabajo 
       - uses: chartboost/ruff-action@v1 #Comprueba que se siguen las reglas de estilo de Ruff
+      
+  test:
+    runs-on: ubuntu-lastest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run tests
+        run: |
+          pytest test_blob.py
+  
