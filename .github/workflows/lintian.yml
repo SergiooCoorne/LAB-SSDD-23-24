@@ -8,7 +8,7 @@ jobs: #Definimos los trabajos que queremos que se ejecuten
       - uses: chartboost/ruff-action@v1 #Comprueba que se siguen las reglas de estilo de Ruff
 
   test:
-    runs-on: ubuntu-lastest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
