@@ -38,6 +38,7 @@ class DataTransfer(IceDrive.DataTransfer):
         """Close the currently opened file."""
         if self.f:
             self.f.close()
+            self.f = None #Para asegurarnos de que el archivo se ha cerrado
         return None 
 
     @staticmethod
