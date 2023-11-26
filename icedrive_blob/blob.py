@@ -38,7 +38,7 @@ class DataTransfer(IceDrive.DataTransfer):
         """Close the currently opened file."""
         if self.f:
             self.f.close()
-            return None 
+        return None 
 
     @staticmethod
     def is_hash_present(file_path: str, target_hash: str) -> bool:
