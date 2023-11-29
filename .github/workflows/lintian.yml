@@ -26,5 +26,5 @@ jobs: #Definimos los trabajos que queremos que se ejecuten
       
       - name: Run tests
         run: |
-          pytest test/test_blob.py
+          pytest test/test.py
   
