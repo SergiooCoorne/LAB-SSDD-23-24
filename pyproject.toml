@@ -29,4 +29,5 @@ linters = ["black", "ruff", "pydocstyle"]
 "Homepage" = "https://github.com/SergiooCoorne/LAB-SSDD-23-24"
 
 [project.scripts]
-icedrive-blob = "icedrive_blob.app:main"
+icedrive-blob-server = "icedrive_blob.command_line_handlers:server"
+icedrive-blob-client = "icedrive_blob.command_line_handlers:client"

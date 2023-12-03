@@ -1,56 +1,50 @@
 """Module for servants implementations."""
-
-import Ice
-import IceDrive
 import hashlib
 import os
+
+import Ice
+
+import IceDrive
+
 
 class DataTransfer(IceDrive.DataTransfer):
     """Implementation of an IceDrive.DataTransfer interface."""
 
-    def __init__(self, file_path: str):
-        """Initialize the DataTransfer object."""
-        self.file_path = file_path #Direccion del archivo asociado a la interfaz DataTransfer
-        self.f = open(file_path, "rb")
-        self.size_file = os.path.getsize(file_path) #Tamaño del archivo
+    def __init__(self, name_file: str):
+        self.name_file = name_file #Direccion del archivo
+        self.f = open(name_file, "rb")
+        self.size_file = os.path.getsize(name_file) #Tamaño del archivo
 
     def read(self, size: int, current: Ice.Current = None) -> bytes:
         """Returns a list of bytes from the opened file."""
-        content_list = [] #Lista donde se almacenara el contenido del archivo
 
-        with open(self.file_path, "rb") as f:
-            while True:
-                chunk = f.read(size)
-                #chunk = f.read(size).decode('utf-8')
-                content_list.append(chunk)
-                if not chunk:
-                    break
+        with open(self.name_file, "rb") as f:
+            if size > self.size_file:
+                return f.read(self.size_file) #Esta funcion read no es la misma que la que estamos implementando
+            else:
+                self.size_file -= size
+                return f.read(size)
 
-        return content_list
 
-    def close(self, current = None) -> None:
+    def close(self, current: Ice.Current = None) -> None:
         """Close the currently opened file."""
         if self.f:
             self.f.close()
             self.f = None #Para asegurarnos de que el archivo se ha cerrado
         return None
 
-
 class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""
-
-    def __init__(self, path: str):
-        """Initialize the BlobService object."""
-        self.path = path #El path va a ser el directorio donde se almacenan los BlobIDs de los archivos junto al numero de veces que se han vinculado
+    def __init__(self, directory_files: str):
+        self.directory_files = directory_files
         self.blob_id_to_file = {} #Diccionario donde se almacenan los BlobIDs de los archivos junto la referencia al archivo
-
 
     def link(self, blob_id: str, current: Ice.Current = None) -> None:
         """Mark a blob_id file as linked in some directory."""
         file_contents = [] #Lista donde vamos a ir guardando el contenido del archivo
 
         # Leemos el contenido del archivo y actualizamos la línea correspondiente
-        with open(self.path, 'r') as f:
+        with open(self.directory_files, 'r') as f:
             for linea in f:
                 partes = linea.split()
                 if partes and len(partes) >= 2 and partes[0] == blob_id: #Si es el blob_id que buscamos, le sumamos 1 al numero de veces que se ha vinculado
@@ -61,7 +55,7 @@ class BlobService(IceDrive.BlobService):
                     file_contents.append(linea)
     
         # Escribimos el contenido actualizado de vuelta al archivo
-        with open(self.path, 'w') as f:
+        with open(self.directory_files, 'w') as f:
             for linea in file_contents:
                 f.write(linea)
 
@@ -70,71 +64,51 @@ class BlobService(IceDrive.BlobService):
         file_contents = []
 
         # Leemos el contenido del archivo y actualizamos la línea correspondiente
-        with open(self.path, 'r') as f:
+        with open(self.directory_files, 'r') as f:
             for linea in f:
                 partes = linea.split()
                 if partes[0] == blob_id: #Si es el blob_id que buscamos, le restamos 1 al numero de veces que se ha vinculado
                     veces_asociado = int(partes[1]) - 1
-                    if veces_asociado == 0: #Si el numero de veces asociado es 0, no lo añadimos al archivo, con lo que se eliminaria
-                        self.blob_id_to_file.pop(blob_id) #Eliminamos el blob_id del diccionario
+                    if veces_asociado == 0: #Si el numero de veces asociado es 0, se eliminaria del diccionario
+                        self.blob_id_to_file.pop(blob_id)
                     else:
                         nueva_linea = partes[0] + " " + str(veces_asociado) + "\n"
                         file_contents.append(nueva_linea)
-                else:
-                    file_contents.append(linea) #Si no es el blob_id que buscamos, lo añadimos tal cual al archivo
 
         # Escribimos el contenido actualizado de vuelta al archivo
-        with open(self.path, 'w') as f:
+        with open(self.directory_files, 'w') as f:
             for linea in file_contents:
                 f.write(linea)
+
     def upload(
         self, blob: IceDrive.DataTransferPrx, current: Ice.Current = None
     ) -> str:
-        """Registra un objeto DataTransfer para cargar un archivo al servicio."""
+        """Register a DataTransfer object to upload a file to the service."""
+        #Primero sacamos el contendio que hay en el archivo asociado al objeto DataTransfer y lo guardamos en una lista
+        contenido = blob.read(10)
+        #Ahora sacamos el suma SHA256 del contenido del archivo y lo añadimos al archivo de blobs
+        blob_id = hashlib.sha256(contenido).hexdigest()
+        with open(self.directory_files, 'a') as f:
+            f.write(blob_id + " " + "1" + "\n") #Añadimos el blob_id al archivo junto con el numero de veces que se ha vinculado
+        
 
-        contenido = b''.join(blob.read(blob.size_file)) #Leemos el contenido del archivo y lo convertimos en una secuencia de bytes
-        hash = hashlib.sha256(contenido).hexdigest() #Sacamos el hash del contenido del archivo
-
-        if not search_hash(self.path, hash): #Si el hash no esta en el archivo, lo añadimos
-            with open(self.path, 'a') as f:
-                f.write(hash + " " + "1") #Añadimos el hash y el numero de veces que se ha vinculado (Al ser la primera vez, es 1)
-                f.write('\n')
-
-            # Asociamos el blob_id con la ruta del archivo original en el diccionario
-            self.blob_id_to_file[hash] = blob.file_path
-            print(f"DEBUG: Se ha agregado {hash} con la ruta {blob.file_path} al diccionario.")
-
-            return hash #Devolvemos el hash
-        else:
-            # Asociamos el blob_id con la ruta del archivo original en el diccionario
-            self.blob_id_to_file[hash] = blob.file_path
-            return hash
 
     def download(
         self, blob_id: str, current: Ice.Current = None
     ) -> IceDrive.DataTransferPrx:
-        """Devuelve un objeto de transferencia de datos para permitir que el cliente descargue la identificación del blob proporcionada."""
-        file_path = self.blob_id_to_file[blob_id] #Obtenemos la ruta del archivo original a partir del blob_id
-        if file_path:
-            return DataTransfer(file_path)
-        else:
-            print("No se encontró el blob_id {blob_id}")
+        """Return a DataTransfer objet to enable the client to download the given blob_id."""
+        #Primero comprobamos que el blob_id se encuentra en el directorio "directory_blobs_id"
+        with open(self.directory_files, 'r') as f:
+            for linea in f:
+                partes = linea.split()
+                if partes[0] == blob_id:
+                    #Si el blob_id se encuentra en el directorio, creamos un objeto DataTransfer
+                    #data_transfer = DataTransfer(self.blob_id_to_file[blob_id])
+                    archivo = partes[2]
+                    data_transfer = DataTransfer(archivo)
+                    prx = current.adapter.addWithUUID(data_transfer)
+                    prx_data_transfer = IceDrive.DataTransferPrx.uncheckedCast(prx)
+                    return prx_data_transfer
+            return None
+                
 
-def search_hash(archivo, hash):
-    try:
-        with open(archivo, 'r') as f:
-            for line in f:
-                if hash in line:
-                    return True
-            return False
-    except:
-        print("Error al abrir el archivo")
-        return False
-    
-def is_hash_present(file_path: str, target_hash: str) -> bool:
-        """Check if a hash is already present in a file."""
-        if not os.path.exists(file_path):
-            return False
-
-        with open(file_path, 'r') as f:
-            return any(line.strip() == target_hash for line in f)
