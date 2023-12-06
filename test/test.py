@@ -1,73 +1,29 @@
-from blobLocal import DataTransfer
-from blobLocal import BlobService
+from typing import List
 import os
+import shutil
+import hashlib
 import pytest
+import sys
 
-@pytest.fixture
-def setup():
-    with open("archivo_test.txt", "w") as f:
-        f.write("Hola")
-    with open("blobs_test.txt", "w") as f:
-        f.write("")
+import Ice
 
-    datatransfer = DataTransfer("archivo_test.txt")
-    blobservice = BlobService("blobs_test.txt")
+import IceDrive
 
-    yield datatransfer, blobservice
-    # Limpiamos el archivo después de los tests
-    if os.path.exists("blobs_test.txt"):
-        os.remove("blobs_test.txt")
-        os.remove("archivo_test.txt")
+from blob import BlobService, DataTransfer, generate_name, create_file, blob_id_exists, find_and_delete_file
 
-def test1(setup):
-    datatransfer, blobservice = setup
-    assert datatransfer is not None
+class TestClientApp(Ice.Application):
+   
+    @pytest.fixture
+    def create_blob_and_data_trasnfer_prx(self, args: List[str]):
+        proxy_b = self.communicator().stringToProxy(args[1])
+        blob_prx = IceDrive.BlobServicePrx.checkedCast(proxy_b)
 
-def test2(setup):
-    datatransfer, blobservice = setup
-    bytes = datatransfer.read(10)
-    assert bytes is not None
-
-def test3(setup):
-    datatransfer, blobservice = setup
-
-    hash = blobservice.upload(datatransfer)
-    with open("blobs_test.txt", "r") as f:
-        for line in f:
-            if hash in line:
-                assert True
-                return
-            
-def test4(setup):
-    datatransfer, blobservice = setup
-    hash = blobservice.upload(datatransfer)
-
-    interfaz = blobservice.download(hash)
-    assert interfaz.file_path is "archivo_test.txt"
-
-def test5(setup):
-    datatransfer, blobservice = setup
-    hash = blobservice.upload(datatransfer)
-
-    blobservice.link(hash)
-    with open("blobs_test.txt", "r") as f:
-        for line in f:
-            if hash in line:
-                lineas = line.split()
-                assert lineas[1] is "2" #Comprobamos que es 2 porque al subirlo se vincula una vez, y al hacer link ya son 2
-
-def test6(setup):
-    datatransfer, blobservice = setup
-    hash = blobservice.upload(datatransfer)
-
-    blobservice.unlink(hash)
-    with open("blobs_test.txt", "r") as f:
-        for line in f:
-            if hash not in line:
-                assert True
-                return
+        proxy_dt = self.communicator().stringToProxy(args[2])
+        dt_prx = IceDrive.DataTransferPrx.checkedCast(proxy_dt)
     
-def test7(setup):
-    datatransfer, blobservice = setup
-    datatransfer.close()
-    assert datatransfer.f is None
+        return blob_prx, dt_prx
+    
+    def comprobarProxys(self, blob_prx, dt_prx):
+        assert blob_prx is not None, "Error: invalid proxy"
+        assert dt_prx is not None, "Error: invalid proxy DataTransfer"
+
