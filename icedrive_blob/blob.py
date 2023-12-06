@@ -112,7 +112,11 @@ class BlobService(IceDrive.BlobService):
         self, blob: IceDrive.DataTransferPrx, current: Ice.Current = None
     ) -> str:
         """Register a DataTransfer object to upload a file to the service."""
-    
+
+        #content = b''    
+        #while content != b'':
+            #content += blob.read(10)
+
         content = blob.read(100)
         blob_id = hashlib.sha256(content).hexdigest()
         #Si el blob_id ya existe, solo tenemos que incrementar el numero de veces que se ha vinculado
