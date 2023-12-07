@@ -17,16 +17,17 @@ class DataTransfer(IceDrive.DataTransfer):
         self.f = open(name_file, "rb")
         self.size_file = os.path.getsize(name_file) #Tamaño del archivo
 
+        
     def read(self, size: int, current: Ice.Current = None) -> bytes:
         """Returns a list of bytes from the opened file."""
+
         try:
-            with open(self.name_file, "rb") as f:
-                if size > self.size_file:
-                    return f.read(self.size_file) #Esta funcion read no es la misma que la que estamos implementando
-                else:
-                    self.size_file -= size
-                    return f.read(size)
-                
+            if size > self.size_file:
+                return self.f.read(self.size_file) #Esta funcion read no es la misma que la que estamos implementando
+            else:
+                self.size_file -= size
+                return self.f.read(size)
+
         except IceDrive.FailedToReadData as e:
             print("Error: " + e.reason)
             return None
@@ -42,7 +43,8 @@ class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""
     def __init__(self, directory_files: str):
         self.directory_files = directory_files
-        self.blob_id_to_file = {} #Diccionario donde se almacenan los BlobIDs de los archivos junto la referencia al archivo
+        self.blob_id_to_file = {} #Diccionario donde se almacenan los BlobIDs de los archivos junto la referencia al archivo por si no queremos
+        #acceder al archivo de persistencia para ver la relacion entre el blob_id y el archivo
 
     def link(self, blob_id: str, current: Ice.Current = None) -> None:
         """Mark a blob_id file as linked in some directory."""
@@ -113,11 +115,14 @@ class BlobService(IceDrive.BlobService):
     ) -> str:
         """Register a DataTransfer object to upload a file to the service."""
 
-        #content = b''    
-        #while content != b'':
-            #content += blob.read(10)
+        #Leemos todo el contenido del archivo en bloques de 2 bytes
+        content = b''    
+        while True:
+            respuesta = blob.read(2)
+            content += respuesta
+            if len(respuesta) == 0:
+                break
 
-        content = blob.read(100)
         blob_id = hashlib.sha256(content).hexdigest()
         #Si el blob_id ya existe, solo tenemos que incrementar el numero de veces que se ha vinculado
         if blob_id_exists(self, blob_id):
@@ -194,3 +199,5 @@ def find_and_delete_file(name_file):
                 print(f"El archivo {name_file} ha sido eliminado exitosamente.")
             except Exception as e:
                 print(f"No se pudo eliminar el archivo {name_file}. Error: {e}")
+
+       
