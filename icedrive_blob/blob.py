@@ -16,14 +16,12 @@ class DataTransfer(IceDrive.DataTransfer):
         self.name_file = name_file #Direccion del archivo
         self.f = open(name_file, "rb")
         self.size_file = os.path.getsize(name_file) #Tamaño del archivo
-
-        
     def read(self, size: int, current: Ice.Current = None) -> bytes:
         """Returns a list of bytes from the opened file."""
-
         try:
             if size > self.size_file:
-                return self.f.read(self.size_file) #Esta funcion read no es la misma que la que estamos implementando
+                #Esta funcion read no es la misma que la que estamos implementando
+                return self.f.read(self.size_file) 
             else:
                 self.size_file -= size
                 return self.f.read(size)
@@ -43,8 +41,10 @@ class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""
     def __init__(self, directory_files: str):
         self.directory_files = directory_files
-        self.blob_id_to_file = {} #Diccionario donde se almacenan los BlobIDs de los archivos junto la referencia al archivo por si no queremos
-        #acceder al archivo de persistencia para ver la relacion entre el blob_id y el archivo
+        self.blob_id_to_file = {} 
+        #Diccionario donde se almacenan los BlobIDs de los archivos junto 
+        #la referencia al archivo por si no queremos acceder al archivo de persistencia 
+        #para ver la relacion entre el blob_id y el archivo
 
     def link(self, blob_id: str, current: Ice.Current = None) -> None:
         """Mark a blob_id file as linked in some directory."""
@@ -62,11 +62,9 @@ class BlobService(IceDrive.BlobService):
                         file_contents.append(nueva_linea)
                     else: #Si no es el blob_id que buscamos, lo añadimos tal cual al archivo
                         file_contents.append(linea)
-
         except IceDrive.UnknownBlob as e:
             print("El blob_id no se encuentra en el directorio." + e.reason)
             return None
-    
         # Escribimos el contenido actualizado de vuelta al archivo
         try:
             with open(self.directory_files, 'w') as f:
@@ -75,7 +73,6 @@ class BlobService(IceDrive.BlobService):
         except Exception as e:
             print("Error: " + e.reason)
             return None
-
 
     def unlink(self, blob_id: str, current: Ice.Current = None) -> None:
         """"Mark a blob_id as unlinked (removed) from some directory."""
@@ -87,10 +84,13 @@ class BlobService(IceDrive.BlobService):
                 for linea in f:
                     partes = linea.split()
                     nombre_archivo = partes[2]
-                    if partes[0] == blob_id: #Si es el blob_id que buscamos, le restamos 1 al numero de veces que se ha vinculado
+                    if partes[0] == blob_id: #Si es el blob_id que buscamos, le restamos 1 
+                        #al numero de veces que se ha vinculado
                         veces_asociado = int(partes[1]) - 1
-                        if veces_asociado == 0: #Si el numero de veces asociado es 0, se eliminaria del diccionario
-                            #self.blob_id_to_file.pop(blob_id) (Linea comentada porque el diccionario a la hora de probar el programa esta vacio)
+                        if veces_asociado == 0: #Si el numero de veces asociado es 0, 
+                            #se eliminaria del diccionario
+                            #self.blob_id_to_file.pop(blob_id) (Linea comentada porque el diccionario a la hora 
+                            #de probar el programa esta vacio)
                             find_and_delete_file(nombre_archivo) #Borramos el archivo del sistema de archivos
                         else:
                             nueva_linea = partes[0] + " " + str(veces_asociado) + " " + nombre_archivo +"\n"
@@ -124,7 +124,8 @@ class BlobService(IceDrive.BlobService):
                 break
 
         blob_id = hashlib.sha256(content).hexdigest()
-        #Si el blob_id ya existe, solo tenemos que incrementar el numero de veces que se ha vinculado
+        #Si el blob_id ya existe, solo tenemos que incrementar el numero de 
+        #veces que se ha vinculado
         if blob_id_exists(self, blob_id):
             self.link(blob_id)
             return blob_id
@@ -135,12 +136,14 @@ class BlobService(IceDrive.BlobService):
         
         try:
             with open(self.directory_files, 'a') as f:
-                f.write(blob_id + " " + "1 " + name_file_aletory + "\n") #Añadimos el blob_id al archivo junto con el numero de veces que se ha vinculado y el nombre del archivo
+                f.write(blob_id + " " + "1 " + name_file_aletory + "\n") #Añadimos el blob_id 
+                #al archivo junto con el numero de veces que se ha vinculado y el nombre del archivo
         except Exception as e:
             print("Error: " + e.reason)
             return None
 
-        self.blob_id_to_file[blob_id] = name_file_aletory #Añadimos el blob_id al diccionario junto con el nombre del archivo
+        self.blob_id_to_file[blob_id] = name_file_aletory #Añadimos el blob_id al diccionario 
+        #junto con el nombre del archivo
         return blob_id #Devolvemos el blob_id
 
     def download(

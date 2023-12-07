@@ -2,16 +2,16 @@
 
 import sys
 
-from .app import BlobApp, ClientApp
+from .app import BlobApp, BlobAppPruebas, ClientAppPruebas
 
 
 def client() -> int:
 
-    app = ClientApp()
+    app = ClientAppPruebas()
     return app.main(sys.argv)
 
 
 def server() -> int:
 
-    app = BlobApp()
+    app = BlobAppPruebas()
     return app.main(sys.argv)
