@@ -40,7 +40,7 @@ class DataTransfer(IceDrive.DataTransfer):
     def close(self, current: Ice.Current = None) -> None:
         """Close the currently opened file."""
         if self.f:
-            #current.adapter.remove(current.id)
+            current.adapter.remove(current.id)
             self.f.close()
             self.f = None #Para asegurarnos de que el archivo se ha cerrado
         return None
@@ -139,6 +139,9 @@ class BlobService(IceDrive.BlobService):
             if len(respuesta) == 0:
                 break
 
+        #Aplicamos close() despues de usar el DataTransfer
+        blob.close()
+        
         blob_id = hashlib.sha256(content).hexdigest()
         #Si el blob_id ya existe, solo tenemos que incrementar el numero de 
         #veces que se ha vinculado
@@ -160,8 +163,7 @@ class BlobService(IceDrive.BlobService):
 
         self.blob_id_to_file[blob_id] = name_file_aletory #Añadimos el blob_id al diccionario 
         #junto con el nombre del archivo
-        #Aplicamos close() despues de usar el DataTransfer
-        blob.close()
+
         return blob_id #Devolvemos el blob_id
 
     def download(
