@@ -45,7 +45,7 @@ class BlobAppPruebas(Ice.Application):
 
         
         #Vamos a crear un sirvitente de DataTransfer para poder realizar Upload()
-        archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba4.txt" #Archivo que vamos a subir
+        archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba2.txt" #Archivo que vamos a subir
 
         servant_datatransfer = DataTransfer(archivo)
         #Los añadimos al adaptador de objetos para que nos de el proxy y asi poder realizar su invocacion remota mediante el cliente
@@ -86,16 +86,17 @@ class ClientAppPruebas(Ice.Application):
             return 1
         
         # -----Pruebas de las funciones-----
-        #blob_id = "e150ac63cc3d71c7f3552ee82efc33bd225795d3acf9433f30ab6fd0445836a8"
-        print("Subida de un archivo al servidor\n-----------")
-        blob_id = self.pruebaUpload(blob_prx, dt_prx)
-        dt_prx.close()
+        #blob_id = "75c56cc49735bea91afdb472fc6f460d0eb95bcb50dcbf89b32e41a0422937dc"
+        #print("-----------Subida de un archivo al servidor-----------")
+        #blob_id = self.pruebaUpload(blob_prx, dt_prx)
+        #print("-----------Cerrando archivo despues de la subida-----------")
+        #dt_prx.close()
         #print("Bajada de un archivo del servidor\n-----------")
         #self.pruebaDonwload(blob_prx, blob_id)
 
 
-        #blob_prx.link("e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f")
-        #blob_prx.unlink("7f36aebf787b81902a09e27a665e9fde8574a72cb3346ae7f562bc1c75109b70")
+        #blob_prx.link("7f62df4e52e5b27f2131153f04be3e18ed08f85ca596c39af69bd29948903984")
+        #blob_prx.unlink("7f62df4e52e5b27f2131153f04be3e18ed08f85ca596c39af69bd29948903984")
 
 
     def pruebaDonwload(self, blob_prx, blob_id):

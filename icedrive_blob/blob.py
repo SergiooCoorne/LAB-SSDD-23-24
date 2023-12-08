@@ -18,21 +18,29 @@ class DataTransfer(IceDrive.DataTransfer):
         self.size_file = os.path.getsize(name_file) #Tamaño del archivo
     def read(self, size: int, current: Ice.Current = None) -> bytes:
         """Returns a list of bytes from the opened file."""
-        try:
-            if size > self.size_file:
-                #Esta funcion read no es la misma que la que estamos implementando
-                return self.f.read(self.size_file) 
-            else:
-                self.size_file -= size
-                return self.f.read(size)
+        content = b''
+        
+        if size > self.size_file:
+            #Esta funcion read no es la misma que la que estamos implementando
+            content = self.f.read(self.size_file)
+            #Comprobamos si la lectura ha sido correcta
+            if len(content) != self.size_file:
+                raise IceDrive.FailedToReadData("Error al leer el archivo")
+            return content
+        else:
+            self.size_file -= size
+            content = self.f.read(size)
+            #Comprobamos si la lectura ha sido correcta
+            if len(content) != size:
+                raise IceDrive.FailedToReadData("Error al leer el archivo")
+            return content
 
-        except IceDrive.FailedToReadData as e:
-            print("Error: " + e.reason)
-            return None
+   
 
     def close(self, current: Ice.Current = None) -> None:
         """Close the currently opened file."""
         if self.f:
+            #current.adapter.remove(current.id)
             self.f.close()
             self.f = None #Para asegurarnos de que el archivo se ha cerrado
         return None
@@ -51,20 +59,23 @@ class BlobService(IceDrive.BlobService):
         file_contents = [] #Lista donde vamos a ir guardando el contenido del archivo
 
         # Leemos el contenido del archivo y actualizamos la línea correspondiente
-        try:
-            with open(self.directory_files, 'r') as f:
-                for linea in f:
-                    partes = linea.split()
-                    if partes and len(partes) >= 2 and partes[0] == blob_id: #Si es el blob_id que buscamos, le sumamos 1 al numero de veces que se ha vinculado
-                        veces_asociado = int(partes[1]) + 1
-                        nombre_archivo = partes[2]
-                        nueva_linea = partes[0] + " " + str(veces_asociado) + " " + nombre_archivo + "\n"
-                        file_contents.append(nueva_linea)
-                    else: #Si no es el blob_id que buscamos, lo añadimos tal cual al archivo
-                        file_contents.append(linea)
-        except IceDrive.UnknownBlob as e:
-            print("El blob_id no se encuentra en el directorio." + e.reason)
-            return None
+        encontrado = False
+        with open(self.directory_files, 'r') as f:
+            for linea in f:
+                partes = linea.split()
+                if partes and len(partes) >= 2 and partes[0] == blob_id: #Si es el blob_id que buscamos, 
+                    #le sumamos 1 al numero de veces que se ha vinculado
+                    encontrado = True
+                    veces_asociado = int(partes[1]) + 1
+                    nombre_archivo = partes[2]
+                    nueva_linea = partes[0] + " " + str(veces_asociado) + " " + nombre_archivo + "\n"
+                    file_contents.append(nueva_linea)
+                else: #Si no es el blob_id que buscamos, lo añadimos tal cual al archivo
+                    file_contents.append(linea)
+        #Si no se encuentra el blob_id en el directorio, lanzamos la excepcion UnknownBlob
+        if not encontrado:
+            raise IceDrive.UnknownBlob(f"El blob_id no se encuentra en el directorio.")
+        
         # Escribimos el contenido actualizado de vuelta al archivo
         try:
             with open(self.directory_files, 'w') as f:
@@ -77,29 +88,29 @@ class BlobService(IceDrive.BlobService):
     def unlink(self, blob_id: str, current: Ice.Current = None) -> None:
         """"Mark a blob_id as unlinked (removed) from some directory."""
         file_contents = []
-
+        encontrado = False
         # Leemos el contenido del archivo y actualizamos la línea correspondiente
-        try:
-            with open(self.directory_files, 'r') as f:
-                for linea in f:
-                    partes = linea.split()
-                    nombre_archivo = partes[2]
-                    if partes[0] == blob_id: #Si es el blob_id que buscamos, le restamos 1 
+        with open(self.directory_files, 'r') as f:
+            for linea in f:
+                partes = linea.split()
+                if partes[0] == blob_id: #Si es el blob_id que buscamos, le restamos 1 
                         #al numero de veces que se ha vinculado
-                        veces_asociado = int(partes[1]) - 1
-                        if veces_asociado == 0: #Si el numero de veces asociado es 0, 
-                            #se eliminaria del diccionario
+                    encontrado = True
+                    nombre_archivo = partes[2]
+                    veces_asociado = int(partes[1]) - 1
+                    if veces_asociado <= 0: #Si el numero de veces asociado es 0, 
+                            #o menor que 0, se eliminaria del diccionario
                             #self.blob_id_to_file.pop(blob_id) (Linea comentada porque el diccionario a la hora 
                             #de probar el programa esta vacio)
-                            find_and_delete_file(nombre_archivo) #Borramos el archivo del sistema de archivos
-                        else:
-                            nueva_linea = partes[0] + " " + str(veces_asociado) + " " + nombre_archivo +"\n"
-                            file_contents.append(nueva_linea)
-                    else:
-                        file_contents.append(linea)
-        except IceDrive.UnknownBlob as e:
-            print("El blob_id no se encuentra en el directorio." + e.reason)
-            return None
+                        find_and_delete_file(nombre_archivo) #Borramos el archivo del sistema de archivos
+                    else:                            
+                        nueva_linea = partes[0] + " " + str(veces_asociado) + " " + nombre_archivo +"\n"
+                        file_contents.append(nueva_linea)
+                else:
+                    file_contents.append(linea)
+        #Si no se encuentra el blob_id en el directorio, lanzamos la excepcion UnknownBlob
+        if not encontrado:
+            raise IceDrive.UnknownBlob(f"El blob_id no se encuentra en el directorio.")
 
         # Escribimos el contenido actualizado de vuelta al archivo
         try:
@@ -119,6 +130,11 @@ class BlobService(IceDrive.BlobService):
         content = b''    
         while True:
             respuesta = blob.read(2)
+
+            #Para comprobar si la lectura se ha hecho de forma incorrecta
+            if len(respuesta) != 2 and len(respuesta) != 0:
+                raise IceDrive.FailedToReadData("Error al leer el archivo")
+
             content += respuesta
             if len(respuesta) == 0:
                 break
@@ -136,14 +152,16 @@ class BlobService(IceDrive.BlobService):
         
         try:
             with open(self.directory_files, 'a') as f:
-                f.write(blob_id + " " + "1 " + name_file_aletory + "\n") #Añadimos el blob_id 
-                #al archivo junto con el numero de veces que se ha vinculado y el nombre del archivo
+                f.write(blob_id + " " + "0 " + name_file_aletory + "\n") #Añadimos el blob_id 
+                #al archivo junto con el numero de veces que se ha vinculado (0) y el nombre del archivo
         except Exception as e:
             print("Error: " + e.reason)
             return None
 
         self.blob_id_to_file[blob_id] = name_file_aletory #Añadimos el blob_id al diccionario 
         #junto con el nombre del archivo
+        #Aplicamos close() despues de usar el DataTransfer
+        blob.close()
         return blob_id #Devolvemos el blob_id
 
     def download(
