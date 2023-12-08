@@ -92,7 +92,7 @@ class ClientAppPruebas(Ice.Application):
         #print("-----------Cerrando archivo despues de la subida-----------")
         #dt_prx.close()
         #print("Bajada de un archivo del servidor\n-----------")
-        self.pruebaDonwload(blob_prx, blob_id)
+        #self.pruebaDonwload(blob_prx, blob_id)
 
 
         #blob_prx.link("7f62df4e52e5b27f2131153f04be3e18ed08f85ca596c39af69bd29948903984")
