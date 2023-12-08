@@ -2,8 +2,8 @@
 
 import sys
 
-from .app import BlobApp, BlobAppPruebas, ClientAppPruebas
-
+from .appPruebas import BlobAppPruebas, ClientAppPruebas
+from .app import BlobApp
 
 def client() -> int:
 
