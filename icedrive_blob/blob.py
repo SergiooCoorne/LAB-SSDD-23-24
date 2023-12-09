@@ -35,8 +35,6 @@ class DataTransfer(IceDrive.DataTransfer):
                 raise IceDrive.FailedToReadData("Error al leer el archivo")
             return content
 
-   
-
     def close(self, current: Ice.Current = None) -> None:
         """Close the currently opened file."""
         if self.f:
