@@ -185,14 +185,13 @@ class BlobService(IceDrive.BlobService):
                 
 
 def generate_name():
-    leter = string.ascii_lowercase
-    long = random.randint(5, 10)
-    name = ''.join(random.choice(leter) for _ in range(long))
-    return name + ".txt"
+    letras = string.ascii_lowercase
+    longitud = random.randint(5, 10)
+    nombre = ''.join(random.choice(letras) for _ in range(longitud))
+    return nombre + ".txt"
 
-def create_file(name, contenido_bytes, path_directory):
-    """Create file in the path_directory with name "nombre" """
-    path = os.path.join(path_directory, name)
+def create_file(nombre, contenido_bytes, path_directory):
+    path = os.path.join(path_directory, nombre)
 
     with open(path, 'wb') as archivo:
         archivo.write(contenido_bytes)
