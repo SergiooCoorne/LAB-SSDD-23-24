@@ -38,9 +38,10 @@ class BlobAppPruebas(Ice.Application):
         adapter.activate()
 
         #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
-        path_archivos = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/archivos.txt"
+        
+        path_directory = "/home/sergio/Escritorio/ficheros_blob_service"
 
-        servant = BlobService(path_archivos)
+        servant = BlobService(path_directory)
         servant_proxy = adapter.addWithUUID(servant)
 
         
@@ -86,7 +87,7 @@ class ClientAppPruebas(Ice.Application):
             return 1
         
         # -----Pruebas de las funciones-----
-        #blob_id = "75c56cc49735bea91afdb472fc6f460d0eb95bcb50dcbf89b32e41a0422937dc"
+        #blob_id = "90cc11e4868e4c93e8da07d9bcbbe90bb39a1eed1558440ac60749a08bf0e2ee"
         #print("-----------Subida de un archivo al servidor-----------")
         #blob_id = self.pruebaUpload(blob_prx, dt_prx)
         #print("-----------Cerrando archivo despues de la subida-----------")
@@ -94,9 +95,8 @@ class ClientAppPruebas(Ice.Application):
         #print("Bajada de un archivo del servidor\n-----------")
         #self.pruebaDonwload(blob_prx, blob_id)
 
-
-        #blob_prx.link("7f62df4e52e5b27f2131153f04be3e18ed08f85ca596c39af69bd29948903984")
-        #blob_prx.unlink("7f62df4e52e5b27f2131153f04be3e18ed08f85ca596c39af69bd29948903984")
+        #blob_prx.link(blob_id)
+        #blob_prx.unlink(blob_id)
 
 
     def pruebaDonwload(self, blob_prx, blob_id):

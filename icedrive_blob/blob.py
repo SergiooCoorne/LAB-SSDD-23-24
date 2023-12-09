@@ -47,13 +47,17 @@ class DataTransfer(IceDrive.DataTransfer):
 
 class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""
-    def __init__(self, directory_files: str):
-        self.directory_files = directory_files
-        self.blob_id_to_file = {} 
-        #Diccionario donde se almacenan los BlobIDs de los archivos junto 
-        #la referencia al archivo por si no queremos acceder al archivo de persistencia 
-        #para ver la relacion entre el blob_id y el archivo
+    def __init__(self, path_directory: str):
+        self.path_directory = path_directory
+        self.directory_files = path_directory + "/" + "ficheros_blob_service.txt"
 
+        # Comprobar si el archivo existe
+        if not os.path.exists(self.directory_files):
+            # Si no existe, crear el archivo
+            with open(self.directory_files, 'w') as archivo:
+                archivo.write("")
+        
+    
     def link(self, blob_id: str, current: Ice.Current = None) -> None:
         """Mark a blob_id file as linked in some directory."""
         file_contents = [] #Lista donde vamos a ir guardando el contenido del archivo
@@ -100,8 +104,7 @@ class BlobService(IceDrive.BlobService):
                     veces_asociado = int(partes[1]) - 1
                     if veces_asociado <= 0: #Si el numero de veces asociado es 0, 
                             #o menor que 0, se eliminaria del diccionario
-                            #self.blob_id_to_file.pop(blob_id) (Linea comentada porque el diccionario a la hora 
-                            #de probar el programa esta vacio)
+                           
                         find_and_delete_file(nombre_archivo) #Borramos el archivo del sistema de archivos
                     else:                            
                         nueva_linea = partes[0] + " " + str(veces_asociado) + " " + nombre_archivo +"\n"
@@ -129,7 +132,7 @@ class BlobService(IceDrive.BlobService):
         #Leemos todo el contenido del archivo en bloques de 2 bytes
         content = b''    
         while True:
-            respuesta = blob.read(2)
+            respuesta = blob.read(2) #El tamaño del bloque es ajustable a nuestro gusto
 
             #Para comprobar si la lectura se ha hecho de forma incorrecta
             if len(respuesta) != 2 and len(respuesta) != 0:
@@ -151,18 +154,17 @@ class BlobService(IceDrive.BlobService):
 
         #Si no existe el blob_id, creamos el archivo y lo añadimos al directorio
         name_file_aletory = generate_name()
-        create_file(name_file_aletory, content)
+        path = create_file(name_file_aletory, content, self.path_directory)
         
+        #Escribimos en nuestro archivo que relaciona los blob_id con los archivos
         try:
             with open(self.directory_files, 'a') as f:
-                f.write(blob_id + " " + "0 " + name_file_aletory + "\n") #Añadimos el blob_id 
+                #path = os.path.abspath(f.name)
+                f.write(blob_id + " " + "0 " + path + "\n") #Añadimos el blob_id 
                 #al archivo junto con el numero de veces que se ha vinculado (0) y el nombre del archivo
         except Exception as e:
             print("Error: " + e.reason)
             return None
-
-        self.blob_id_to_file[blob_id] = name_file_aletory #Añadimos el blob_id al diccionario 
-        #junto con el nombre del archivo
 
         return blob_id #Devolvemos el blob_id
 
@@ -174,9 +176,7 @@ class BlobService(IceDrive.BlobService):
         with open(self.directory_files, 'r') as f:
             for linea in f:
                 partes = linea.split()
-                if partes[0] == blob_id:
-                    #Si el blob_id se encuentra en el directorio, creamos un objeto DataTransfer
-                    #data_transfer = DataTransfer(self.blob_id_to_file[blob_id])
+                if partes[0] == blob_id:                    
                     archivo = partes[2]
                     data_transfer = DataTransfer(archivo)
                     prx = current.adapter.addWithUUID(data_transfer)
@@ -193,9 +193,13 @@ def generate_name():
     nombre = ''.join(random.choice(letras) for _ in range(longitud))
     return nombre + ".txt"
 
-def create_file(nombre, contenido_bytes):
-    with open(nombre, 'wb') as archivo:
+def create_file(nombre, contenido_bytes, path_directory):
+    path = os.path.join(path_directory, nombre)
+
+    with open(path, 'wb') as archivo:
         archivo.write(contenido_bytes)
+
+    return path
 
 def blob_id_exists(self, blob_id: str) -> bool:
     """Check if the given blob_id already exists in the file."""
@@ -207,20 +211,12 @@ def blob_id_exists(self, blob_id: str) -> bool:
     return False
 
 def find_and_delete_file(name_file):
-    # Obtén el directorio actual
-    current_directory = os.getcwd()
+    """Find and delete a file in the current directory."""
 
-    # Recorre los archivos en el directorio actual
-    for root, dirs, files in os.walk(current_directory):
-        if name_file in files:
-            # Construye la ruta completa del archivo
-            ruta_archivo = os.path.join(root, name_file)
-
-            # Intenta eliminar el archivo
-            try:
-                os.remove(ruta_archivo)
-                print(f"El archivo {name_file} ha sido eliminado exitosamente.")
-            except Exception as e:
-                print(f"No se pudo eliminar el archivo {name_file}. Error: {e}")
+    try:
+        os.remove(name_file)
+        print(f"El archivo ha sido eliminado exitosamente.")
+    except Exception as e:
+        print(f"No se pudo eliminar el archivo. Error: {e}")
 
        

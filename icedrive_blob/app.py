@@ -15,9 +15,10 @@ class BlobApp(Ice.Application):
         adapter = self.communicator().createObjectAdapter("BlobAdapter")
         adapter.activate()
 
-        path_archivos = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/archivos.txt"
+        #Ruta donde queremos que se guarden nuestros ficheros
+        path_directory = "/home/sergio/Escritorio/ficheros_blob_service"
 
-        servant = BlobService(path_archivos)
+        servant = BlobService(path_directory)
         servant_proxy = adapter.addWithUUID(servant)
 
         logging.info("Proxy sirviente BlobService: %s", servant_proxy)
