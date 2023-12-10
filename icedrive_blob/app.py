@@ -11,6 +11,8 @@ from .blob import BlobService
 
 #Clase con la que ejecutamos el servicio Blob
 class BlobApp(Ice.Application):
+    """Implementation of the Ice.Application for the Authentication service."""
+
     def run(self, args: List[str]) -> int:
         adapter = self.communicator().createObjectAdapter("BlobAdapter")
         adapter.activate()
