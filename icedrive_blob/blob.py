@@ -145,8 +145,8 @@ class BlobService(IceDrive.BlobService):
         blob_id = hashlib.sha256(content).hexdigest()
         #Si el blob_id ya existe, solo tenemos que incrementar el numero de 
         #veces que se ha vinculado
-        if blob_id_exists(self, blob_id):
-            self.link(blob_id)
+        if blob_id_exists(blob_id, self.directory_files):
+            print("El archivo ya existe en el directorio.\n")
             return blob_id
 
         #Si no existe el blob_id, creamos el archivo y lo añadimos al directorio
@@ -198,9 +198,9 @@ def create_file(nombre, contenido_bytes, path_directory):
 
     return path
 
-def blob_id_exists(self, blob_id: str) -> bool:
+def blob_id_exists(blob_id: str, directory_files: str) -> bool:
     """Check if the given blob_id already exists in the file."""
-    with open(self.directory_files, 'r') as f:
+    with open(directory_files, 'r') as f:
         for line in f:
             parts = line.split()
             if parts and len(parts) >= 3 and parts[0] == blob_id:
@@ -214,5 +214,3 @@ def find_and_delete_file(name_file):
         print(f"El archivo ha sido eliminado exitosamente.")
     except Exception as e:
         print(f"No se pudo eliminar el archivo. Error: {e}")
-
-       

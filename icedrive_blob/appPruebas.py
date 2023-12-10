@@ -94,8 +94,9 @@ class ClientAppPruebas(Ice.Application):
         #dt_prx.close()
         #print("Bajada de un archivo del servidor\n-----------")
         #self.pruebaDonwload(blob_prx, blob_id)
-
+        #print("Incrementando numero de links\n-----------")
         #blob_prx.link(blob_id)
+        #print("Decrementando numero de links\n-----------")
         #blob_prx.unlink(blob_id)
 
 
