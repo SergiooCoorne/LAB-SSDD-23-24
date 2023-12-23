@@ -122,7 +122,7 @@ class BlobService(IceDrive.BlobService):
             return None
 
     def upload(
-        self, blob: IceDrive.DataTransferPrx, current: Ice.Current = None
+        self, user: IceDrive.UserPrx, blob: IceDrive.DataTransferPrx, current: Ice.Current = None
     ) -> str:
         """Register a DataTransfer object to upload a file to the service."""
 
@@ -166,7 +166,7 @@ class BlobService(IceDrive.BlobService):
         return blob_id #Devolvemos el blob_id
 
     def download(
-        self, blob_id: str, current: Ice.Current = None
+        self, user: IceDrive.UserPrx, blob_id: str, current: Ice.Current = None
     ) -> IceDrive.DataTransferPrx:
         """Return a DataTransfer objet to enable the client to download the given blob_id."""
         #Primero comprobamos que el blob_id se encuentra en el directorio "directory_blobs_id"
