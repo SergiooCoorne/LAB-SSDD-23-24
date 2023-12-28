@@ -4,14 +4,14 @@ import logging
 from typing import List
 
 import Ice
-import IceStrom
+import IceStorm
 
 import IceDrive
 import threading
 
 from .blob import BlobService 
 from .blob import DataTransfer
-from discovery import Discovery
+from .discovery import Discovery
 
 #Clase con la que he estado ejecutando pruebas para verificar el funcionamiento de los metodos
 class BlobAppPruebas(Ice.Application):
@@ -25,20 +25,19 @@ class BlobAppPruebas(Ice.Application):
         properties = self.communicator().getProperties()
         topic_name = properties.getProperty("TopicName")
 
-        topic_manager = IceStrom.TopicManagerPrx(
-            self.communicator().propertyToProxy("IceStrom.TopicManager.Proxy")
+        topic_manager = IceStorm.TopicManagerPrx.checkedCast(
+            self.communicator().propertyToProxy("IceStorm.TopicManager.Proxy")
         )
 
         try:
             topic = topic_manager.retrieve(topic_name)
-        except IceStrom.NoSuchTopic:
+        except IceStorm.NoSuchTopic:
             topic = topic_manager.create(topic_name)
 
         #Obtenemos el publisher
         publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic.getPublisher())
         discovery = Discovery(publisher) #Creamos la instancia de nuestra clase discovery
         
-
         #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
         path_directory = "/home/sergio/Escritorio/ficheros_blob_service"
 
