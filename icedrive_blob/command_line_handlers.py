@@ -13,5 +13,5 @@ def client() -> int:
 
 def server() -> int:
 
-    app = BlobApp()
+    app = BlobAppPruebas()
     return app.main(sys.argv)

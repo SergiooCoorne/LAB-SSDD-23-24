@@ -12,10 +12,16 @@ import IceDrive
 class DataTransfer(IceDrive.DataTransfer):
     """Implementation of an IceDrive.DataTransfer interface."""
 
-    def __init__(self, name_file: str):
-        self.name_file = name_file #Direccion del archivo
-        self.f = open(name_file, "rb")
-        self.size_file = os.path.getsize(name_file) #Tamaño del archivo
+    def __init__(self, path_directory: str):
+        self.path_directory = path_directory
+        self.directory_files = path_directory + "/" + "ficheros_blob_service.txt"
+
+        # Comprobar si el archivo existe
+        if not os.path.exists(self.directory_files):
+            # Si no existe, crear el archivo
+            with open(self.directory_files, 'w') as archivo:
+                archivo.write("")
+        
     def read(self, size: int, current: Ice.Current = None) -> bytes:
         """Returns a list of bytes from the opened file."""
         content = b''

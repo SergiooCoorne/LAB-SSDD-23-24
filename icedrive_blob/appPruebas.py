@@ -4,11 +4,14 @@ import logging
 from typing import List
 
 import Ice
+import IceStrom
 
 import IceDrive
+import threading
 
 from .blob import BlobService 
 from .blob import DataTransfer
+from discovery import Discovery
 
 #Clase con la que he estado ejecutando pruebas para verificar el funcionamiento de los metodos
 class BlobAppPruebas(Ice.Application):
@@ -19,24 +22,44 @@ class BlobAppPruebas(Ice.Application):
         adapter = self.communicator().createObjectAdapter("BlobAdapter")
         adapter.activate()
 
-        #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
+        properties = self.communicator().getProperties()
+        topic_name = properties.getProperty("TopicName")
+
+        topic_manager = IceStrom.TopicManagerPrx(
+            self.communicator().propertyToProxy("IceStrom.TopicManager.Proxy")
+        )
+
+        try:
+            topic = topic_manager.retrieve(topic_name)
+        except IceStrom.NoSuchTopic:
+            topic = topic_manager.create(topic_name)
+
+        #Obtenemos el publisher
+        publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic.getPublisher())
+        discovery = Discovery(publisher) #Creamos la instancia de nuestra clase discovery
         
+
+        #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
         path_directory = "/home/sergio/Escritorio/ficheros_blob_service"
 
         servant = BlobService(path_directory)
-        servant_proxy = adapter.addWithUUID(servant)
+        servant_blob_proxy = adapter.addWithUUID(servant)
 
-        
+        #Ahora creamos los hilos para que esten haciendo invaciones cada 5 segundos
+        threading.Timer(5.0, discovery.announceBlobService, (servant_blob_proxy, None)).start()
+        #threading.Timer(5.0, discovery.announceAuthentication, ()).start()
+        #threading.Timer(5.0. discovery.announceDirectoryServicey, ()).start()
+
         #Vamos a crear un sirvitente de DataTransfer para poder realizar Upload()
-        archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba2.txt" #Archivo que vamos a subir
+        #archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba2.txt" #Archivo que vamos a subir
 
-        servant_datatransfer = DataTransfer(archivo)
+        #servant_datatransfer = DataTransfer(archivo)
         #Los añadimos al adaptador de objetos para que nos de el proxy y asi poder realizar su invocacion remota mediante el cliente
-        servant_dt_proxy = adapter.addWithUUID(servant_datatransfer)
+        #servant_dt_proxy = adapter.addWithUUID(servant_datatransfer)
 
         #Proxys de los dos sirvientes
-        logging.info("Proxy BlobService: %s", servant_proxy)
-        logging.info("Proxy2 DataTransfer: %s", servant_dt_proxy)
+        logging.info("Proxy BlobService: %s", servant_blob_proxy)
+        #logging.info("Proxy2 DataTransfer: %s", servant_dt_proxy)
 
         self.shutdownOnInterrupt()
         self.communicator().waitForShutdown()
