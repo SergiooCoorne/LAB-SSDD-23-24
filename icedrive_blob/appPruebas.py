@@ -22,32 +22,33 @@ class BlobAppPruebas(Ice.Application):
         adapter = self.communicator().createObjectAdapter("BlobAdapter")
         adapter.activate()
 
-        properties = self.communicator().getProperties()
-        topic_name = properties.getProperty("TopicName")
-
-        topic_manager = IceStorm.TopicManagerPrx.checkedCast(
-            self.communicator().propertyToProxy("IceStorm.TopicManager.Proxy")
-        )
-
-        try:
-            topic = topic_manager.retrieve(topic_name)
-        except IceStorm.NoSuchTopic:
-            topic = topic_manager.create(topic_name)
-
-        #Obtenemos el publisher
-        publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic.getPublisher())
-        discovery = Discovery(publisher) #Creamos la instancia de nuestra clase discovery
-        
         #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
         path_directory = "/home/sergio/Escritorio/ficheros_blob_service"
 
         servant = BlobService(path_directory)
         servant_blob_proxy = adapter.addWithUUID(servant)
 
-        #Ahora creamos los hilos para que esten haciendo invaciones cada 5 segundos
-        threading.Timer(5.0, discovery.announceBlobService, (servant_blob_proxy, None)).start()
-        #threading.Timer(5.0, discovery.announceAuthentication, ()).start()
-        #threading.Timer(5.0. discovery.announceDirectoryServicey, ()).start()
+        properties = self.communicator().getProperties() #Obtenemos las propiedades del comunicador
+        topic_name = properties.getProperty("TopicName") #Obtenemos el nombre del topic cuya clave es "TopicName"
+
+        #Ahora obtenemos el manejador de topics a traves de castear el proxy que nos devuelve el communicator con la clave "IceStorm.TopicManager.Proxy"
+        topic_manager = IceStorm.TopicManagerPrx.checkedCast(
+            self.communicator().propertyToProxy("IceStorm.TopicManager.Proxy")
+        )
+
+        #Intentamos obtener el topic con el nombre que hemos definido antes
+        try:
+            topic = topic_manager.retrieve(topic_name)
+        except IceStorm.NoSuchTopic:
+            topic = topic_manager.create(topic_name)
+
+        #Obtenemos el publisher castenado el topic que hemos obtenido a un topic del tipo Discovery
+        publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic.getPublisher())
+        
+        #Hacemos el que publisher anuncie el proxy de nuestro servicio
+        #publisher.announceBlobService(IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy))
+        #De esta manera en vez de anunciarlo solo una vez, lo estamos anunciando cada 5 segundos
+        threading.Timer(5.0, publisher.announceBlobService, (IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy),)).start()
 
         #Vamos a crear un sirvitente de DataTransfer para poder realizar Upload()
         #archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba2.txt" #Archivo que vamos a subir
