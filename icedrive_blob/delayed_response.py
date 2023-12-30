@@ -15,6 +15,9 @@ class BlobQueryResponse(IceDrive.BlobQueryResponse):
         """Receive a `DataTransfer` when other service instance knows the `blob_id`."""
         self.future.set(blob) #Establecemos el proxy del DataTranfer en el objeto future
 
+    def blobExists(self, current: Ice.Current = None) -> None:
+        """Indicate that `blob_id` was recognised by other service instance."""
+        
     def blobLinked(self, current: Ice.Current = None) -> None:
         """Indicate that `blob_id` was recognised by other service instance and was linked."""
         print("Blob_id reconocido y enlazado\n")
@@ -36,6 +39,9 @@ class BlobQuery(IceDrive.BlobQuery):
             response.downloadBlob(data_transfer_prx)
         except IceDrive.UnknownBlob:
             print("Blob_id no encontrado\n")
+
+    def blobIdExists(self, blob_id: str, reponse: IceDrive.BlobQueryResponsePrx, current: Ice.Current = None) -> None:
+        "Receive a query to check if `blob_id` archive exists."
 
     def linkBlob(self, blob_id: str, response: IceDrive.BlobQueryResponsePrx, current: Ice.Current = None) -> None:
         """Receive a query to create a link for `blob_id` archive if it exists."""
