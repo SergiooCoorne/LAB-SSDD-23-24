@@ -1,5 +1,6 @@
 """Module for servants implementations."""
 from typing import List
+from .delayed_response import BlobQueryResponse
 
 import hashlib
 import os
@@ -52,19 +53,30 @@ class DataTransfer(IceDrive.DataTransfer):
 
 class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""
-    #def __init__(self, path_directory: str, authentication_proxies: List[IceDrive.AuthenticationPrx], query_publisher):
-    def __init__(self, path_directory: str):
+    def __init__(self, path_directory: str, authentication_proxies: List[IceDrive.AuthenticationPrx], query_publisher):
+    #def __init__(self, path_directory: str):
         self.path_directory = path_directory
         self.directory_files = path_directory + "/" + "ficheros_blob_service.txt"
-        #self.authentication_proxies = authentication_proxies
-        #self.query_publisher = query_publisher
+        self.authentication_proxies = authentication_proxies
+        self.query_publisher = query_publisher
+        self.expected_responses = {}
 
         # Comprobar si el archivo existe
         if not os.path.exists(self.directory_files):
             # Si no existe, crear el archivo
             with open(self.directory_files, 'w') as archivo:
                 archivo.write("")
-        
+
+    def prepare_callback(self, current: Ice.Current) -> IceDrive.BlobQueryResponsePrx:
+        """Prepare an Ice.Future object and send the query"""
+        future = Ice.Future()
+        reponse = BlobQueryResponse(future)
+        prx = current.adapter.addWithUUID(reponse)
+        query_response_prx = IceDrive.BlobQueryResponsePrx.uncheckedCast(prx)
+
+        identity = query_response_prx.ice_getIdentity()
+        self.expected_responses[identity] = future
+        return query_response_prx
     
     def link(self, blob_id: str, current: Ice.Current = None) -> None:
         """Mark a blob_id file as linked in some directory."""

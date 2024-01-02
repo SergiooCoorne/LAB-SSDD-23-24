@@ -4,7 +4,7 @@ import Ice
 
 import IceDrive
 
-from .blob import BlobService
+
 
 class BlobQueryResponse(IceDrive.BlobQueryResponse):
     """Query response receiver."""
@@ -28,7 +28,7 @@ class BlobQueryResponse(IceDrive.BlobQueryResponse):
 
 class BlobQuery(IceDrive.BlobQuery):
     """Query receiver."""
-    def __init__(self, blob_service: BlobService) -> None:
+    def __init__(self, blob_service) -> None:
         """" Receive a BlobServicePrx. This proxy will be used to download, link, or unlink the file"""
         self.blob_service = blob_service
 

@@ -17,13 +17,11 @@ from .delayed_response import BlobQuery
 #Clase con la que he estado ejecutando pruebas para verificar el funcionamiento de los metodos
 class BlobAppPruebas(Ice.Application):
     """Implementation of the Ice.Application for the Authentication service."""
-    def __init__(self, blobService: BlobService) -> None:
-        super().__init__()
-        self.blobServecie = BlobService
-
-
+    
     def run(self, args: List[str]) -> int:
         """Execute the code for the BlobApp class."""
+        path_directory = "/home/sergio/Escritorio/ficheros_blob_service"
+
         adapter = self.communicator().createObjectAdapter("BlobAdapter")
         adapter.activate()
 
@@ -47,12 +45,12 @@ class BlobAppPruebas(Ice.Application):
         #Ahora vamos a crear un publicador de querys. Este va a ser el encargado de enviar las peticiones a las demas instancias BlobService
         query_pub = IceDrive.BlobQueryResponsePrx.uncheckedCast(topic.getPublisher())
         #Tambien creamos una instancia de la clase que va a recibir las peticiones de otros BlobServices
-        query_receiver = BlobQuery(self.blobServecie)
+        blob = BlobService(path_directory, [], query_pub)
+        query_receiver = BlobQuery(blob)
 
         #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
-        path_directory = "/home/sergio/Escritorio/ficheros_blob_service"
-
-        servant = BlobService(path_directory)
+        
+        servant = BlobService(path_directory, [], query_pub)
         servant_blob_proxy = adapter.addWithUUID(servant)
         query_receiver_proxy = adapter.addWithUUID(query_receiver)
 
