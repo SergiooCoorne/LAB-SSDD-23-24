@@ -4,7 +4,7 @@ import Ice
 
 import IceDrive
 
-from blob import BlobService
+from .blob import BlobService
 
 class BlobQueryResponse(IceDrive.BlobQueryResponse):
     """Query response receiver."""
@@ -13,7 +13,7 @@ class BlobQueryResponse(IceDrive.BlobQueryResponse):
 
     def downloadBlob(self, blob: IceDrive.DataTransferPrx, current: Ice.Current = None) -> None:
         """Receive a `DataTransfer` when other service instance knows the `blob_id`."""
-        self.future.set(blob) #Establecemos el proxy del DataTranfer en el objeto future
+        self.future.set_result(blob) #Establecemos el proxy del DataTranfer en el objeto future
 
     def blobExists(self, current: Ice.Current = None) -> None:
         """Indicate that `blob_id` was recognised by other service instance."""

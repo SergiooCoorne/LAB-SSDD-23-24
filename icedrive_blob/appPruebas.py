@@ -12,24 +12,23 @@ import threading
 from .blob import BlobService 
 from .blob import DataTransfer
 from .discovery import Discovery
+from .delayed_response import BlobQuery
 
 #Clase con la que he estado ejecutando pruebas para verificar el funcionamiento de los metodos
 class BlobAppPruebas(Ice.Application):
     """Implementation of the Ice.Application for the Authentication service."""
+    def __init__(self, blobService: BlobService) -> None:
+        super().__init__()
+        self.blobServecie = BlobService
+
 
     def run(self, args: List[str]) -> int:
         """Execute the code for the BlobApp class."""
         adapter = self.communicator().createObjectAdapter("BlobAdapter")
         adapter.activate()
 
-        #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
-        path_directory = "/home/sergio/Escritorio/ficheros_blob_service"
-
-        servant = BlobService(path_directory)
-        servant_blob_proxy = adapter.addWithUUID(servant)
-
         properties = self.communicator().getProperties() #Obtenemos las propiedades del comunicador
-        topic_name = properties.getProperty("TopicName") #Obtenemos el nombre del topic cuya clave es "TopicName"
+        topic_name = properties.getProperty("Discovery") #Obtenemos el nombre del topic cuya clave es "TopicName"
 
         #Ahora obtenemos el manejador de topics a traves de castear el proxy que nos devuelve el communicator con la clave "IceStorm.TopicManager.Proxy"
         topic_manager = IceStorm.TopicManagerPrx.checkedCast(
@@ -42,9 +41,24 @@ class BlobAppPruebas(Ice.Application):
         except IceStorm.NoSuchTopic:
             topic = topic_manager.create(topic_name)
 
-        #Obtenemos el publisher castenado el topic que hemos obtenido a un topic del tipo Discovery
+        #Obtenemos el publisher que anuncia nuestro servicio castenado el topic que hemos obtenido a un topic del tipo Discovery
         publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic.getPublisher())
-        
+
+        #Ahora vamos a crear un publicador de querys. Este va a ser el encargado de enviar las peticiones a las demas instancias BlobService
+        query_pub = IceDrive.BlobQueryResponsePrx.uncheckedCast(topic.getPublisher())
+        #Tambien creamos una instancia de la clase que va a recibir las peticiones de otros BlobServices
+        query_receiver = BlobQuery(self.blobServecie)
+
+        #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
+        path_directory = "/home/sergio/Escritorio/ficheros_blob_service"
+
+        servant = BlobService(path_directory)
+        servant_blob_proxy = adapter.addWithUUID(servant)
+        query_receiver_proxy = adapter.addWithUUID(query_receiver)
+
+        #Parte de la subscripcion al topic
+        topic.subscribeAndGetPublisher({}, query_receiver_proxy)
+
         #Hacemos el que publisher anuncie el proxy de nuestro servicio
         #publisher.announceBlobService(IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy))
         #De esta manera en vez de anunciarlo solo una vez, lo estamos anunciando cada 5 segundos

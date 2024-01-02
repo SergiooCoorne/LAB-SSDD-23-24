@@ -52,10 +52,12 @@ class DataTransfer(IceDrive.DataTransfer):
 
 class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""
-    def __init__(self, path_directory: str, authentication_proxies: List[IceDrive.AuthenticationPrx]):
+    #def __init__(self, path_directory: str, authentication_proxies: List[IceDrive.AuthenticationPrx], query_publisher):
+    def __init__(self, path_directory: str):
         self.path_directory = path_directory
         self.directory_files = path_directory + "/" + "ficheros_blob_service.txt"
-        self.authentication_proxies = authentication_proxies
+        #self.authentication_proxies = authentication_proxies
+        #self.query_publisher = query_publisher
 
         # Comprobar si el archivo existe
         if not os.path.exists(self.directory_files):
