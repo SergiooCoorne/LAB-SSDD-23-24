@@ -60,7 +60,7 @@ class BlobAppPruebas(Ice.Application):
         #Hacemos el que publisher anuncie el proxy de nuestro servicio
         #publisher.announceBlobService(IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy))
         #De esta manera en vez de anunciarlo solo una vez, lo estamos anunciando cada 5 segundos
-        threading.Timer(5.0, publisher.announceBlobService, (IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy),)).start()
+        threading.Timer(5.0, publisher.announceBlobService, (IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy),None)).start()
 
         #Vamos a crear un sirvitente de DataTransfer para poder realizar Upload()
         #archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba2.txt" #Archivo que vamos a subir

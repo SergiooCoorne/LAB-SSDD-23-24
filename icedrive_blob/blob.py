@@ -9,6 +9,7 @@ import string
 import Ice
 import IceDrive
 import time
+import threading
 
 
 class DataTransfer(IceDrive.DataTransfer):
@@ -67,15 +68,25 @@ class BlobService(IceDrive.BlobService):
             with open(self.directory_files, 'w') as archivo:
                 archivo.write("")
 
+    def remove_object_if_exists(self, adapter: Ice.ObjectAdapter, identity: Ice.Identity) -> None:
+        """Remove an object from the adapter if exists."""
+        if adapter.find(identity) is not None:
+            adapter.remove(identity)
+            self.expected_responses[identity].set_exception(IceDrive.UnknownBlob())
+
+        del self.expected_responses[identity]
+
     def prepare_callback(self, current: Ice.Current) -> IceDrive.BlobQueryResponsePrx:
         """Prepare an Ice.Future object and send the query"""
-        future = Ice.Future()
-        reponse = BlobQueryResponse(future)
-        prx = current.adapter.addWithUUID(reponse)
-        query_response_prx = IceDrive.BlobQueryResponsePrx.uncheckedCast(prx)
+        future = Ice.Future() #Creamos un objeto Ice.Future (Objeto que todavia no se ha calculado pero se calculara en un futuro)
+        reponse = BlobQueryResponse(future) #Creamos un objeto de tipo BlobQueryResponse pasandole el objeto Ice.Future
+        prx = current.adapter.addWithUUID(reponse) #Añadimos el objeto al adaptador de objetos y guardamos el proxy de la respuesta
+        query_response_prx = IceDrive.BlobQueryResponsePrx.uncheckedCast(prx) #Hacemos un cast del proxy de la respuesta a BlobQueryResponsePrx
 
-        identity = query_response_prx.ice_getIdentity()
-        self.expected_responses[identity] = future
+        identity = query_response_prx.ice_getIdentity() #Obtenemos la identidad del proxy de la respuesta
+        self.expected_responses[identity] = future #Guardamos en el diccionario de respuestas esperadas la identidad y el objeto Ice.Future
+        threading.Timer(5.0, self.remove_object_if_exists, (current.adapter, identity)).start() #Creamos un hilo que se ejecutara en 5 segundos y que ejecutara 
+        #la funcion remove_object_if_exists pasandole el adaptador de objetos y la identidad. Esto se hace para ahorrar memoria al hacer una llamada de un metodo que no podemos completar
         return query_response_prx
     
     def link(self, blob_id: str, current: Ice.Current = None) -> None:

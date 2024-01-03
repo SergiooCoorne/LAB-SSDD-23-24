@@ -4,6 +4,7 @@ import Ice
 
 import IceDrive
 
+from .blob import blob_id_exists
 
 
 class BlobQueryResponse(IceDrive.BlobQueryResponse):
@@ -17,7 +18,8 @@ class BlobQueryResponse(IceDrive.BlobQueryResponse):
 
     def blobExists(self, current: Ice.Current = None) -> None:
         """Indicate that `blob_id` was recognised by other service instance."""
-        
+        print("Blob_id presente en otro instancia BlobService\n")
+
     def blobLinked(self, current: Ice.Current = None) -> None:
         """Indicate that `blob_id` was recognised by other service instance and was linked."""
         print("Blob_id reconocido y enlazado\n")
@@ -42,6 +44,12 @@ class BlobQuery(IceDrive.BlobQuery):
 
     def blobIdExists(self, blob_id: str, reponse: IceDrive.BlobQueryResponsePrx, current: Ice.Current = None) -> None:
         "Receive a query to check if `blob_id` archive exists."
+        try:
+            if blob_id_exists(blob_id, self.blob_service.directory_files):
+                reponse.blobExists()
+            #Si no existe, no hacemos nada ya que cuando pasen 5 segundos el otro servicio procedera a hacer la subida del Blob
+        except:
+            print("Blob_id no encontrado\n")
 
     def linkBlob(self, blob_id: str, response: IceDrive.BlobQueryResponsePrx, current: Ice.Current = None) -> None:
         """Receive a query to create a link for `blob_id` archive if it exists."""
