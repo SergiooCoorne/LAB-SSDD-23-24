@@ -15,16 +15,11 @@ import threading
 class DataTransfer(IceDrive.DataTransfer):
     """Implementation of an IceDrive.DataTransfer interface."""
 
-    def __init__(self, path_directory: str):
-        self.path_directory = path_directory
-        self.directory_files = path_directory + "/" + "ficheros_blob_service.txt"
-        
-        # Comprobar si el archivo existe
-        if not os.path.exists(self.directory_files):
-            # Si no existe, crear el archivo
-            with open(self.directory_files, 'w') as archivo:
-                archivo.write("")
-        
+    def __init__(self, name_file: str):
+        self.name_file = name_file #Direccion del archivo
+        self.f = open(name_file, "rb")
+        self.size_file = os.path.getsize(name_file) #Tamaño del archivo
+                
     def read(self, size: int, current: Ice.Current = None) -> bytes:
         """Returns a list of bytes from the opened file."""
         content = b''
@@ -32,10 +27,8 @@ class DataTransfer(IceDrive.DataTransfer):
         if size > self.size_file:
             #Esta funcion read no es la misma que la que estamos implementando
             content = self.f.read(self.size_file)
-            #Comprobamos si la lectura ha sido correcta
-            if len(content) != self.size_file:
-                raise IceDrive.FailedToReadData("Error al leer el archivo")
             return content
+        
         else:
             self.size_file -= size
             content = self.f.read(size)
@@ -54,9 +47,17 @@ class DataTransfer(IceDrive.DataTransfer):
 
 class BlobService(IceDrive.BlobService):
     """Implementation of an IceDrive.BlobService interface."""
-    def __init__(self, path_directory: str, authentication_proxies: List[IceDrive.AuthenticationPrx], query_publisher):
+    def __init__(self,authentication_proxies: List[IceDrive.AuthenticationPrx], query_publisher):
     #def __init__(self, path_directory: str):
-        self.path_directory = path_directory
+        path_directory = os.path.expanduser("~")
+
+        # Crear la carpeta si no existe
+        folder_name = "ficheros_blob_service"
+        folder_path = os.path.join(path_directory, folder_name)
+        os.makedirs(folder_path, exist_ok=True)
+
+        self.path_directory = folder_path
+        self.directory_files = os.path.join(folder_path, "ficheros_blob_service.txt")
         self.directory_files = path_directory + "/" + "ficheros_blob_service.txt"
         self.authentication_proxies = authentication_proxies
         self.query_publisher = query_publisher
@@ -167,10 +168,6 @@ class BlobService(IceDrive.BlobService):
                 content = b''    
                 while True:
                     answer = blob.read(2) #El tamaño del bloque es ajustable a nuestro gusto
-
-                    #Para comprobar si la lectura se ha hecho de forma incorrecta
-                    if len(answer) != 2 and len(answer) != 0:
-                        raise IceDrive.FailedToReadData("Error al leer el archivo")
 
                     content += answer
                     if len(answer) == 0:
