@@ -4,6 +4,9 @@ import Ice
 
 import IceDrive
 
+
+
+
 class BlobQueryResponse(IceDrive.BlobQueryResponse):
     """Query response receiver."""
     def __init__(self, future: Ice.Future) -> None:
@@ -64,13 +67,3 @@ class BlobQuery(IceDrive.BlobQuery):
             response.blobUnlinked()
         except IceDrive.UnknownBlob:
             print("Blod_id no encontrado\n")
-
-
-def blob_id_exists(blob_id: str, directory_files: str) -> bool:
-    """Check if the given blob_id already exists in the file."""
-    with open(directory_files, 'r') as f:
-        for line in f:
-            parts = line.split()
-            if parts and len(parts) >= 3 and parts[0] == blob_id:
-                return True
-    return False
