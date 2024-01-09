@@ -8,7 +8,6 @@ import random
 import string
 import Ice
 import IceDrive
-import time
 import threading
 
 
@@ -58,7 +57,6 @@ class BlobService(IceDrive.BlobService):
 
         self.path_directory = folder_path
         self.directory_files = os.path.join(folder_path, "ficheros_blob_service.txt")
-        self.directory_files = path_directory + "/" + "ficheros_blob_service.txt"
         self.authentication_proxies = authentication_proxies
         self.query_publisher = query_publisher
         self.expected_responses = {}

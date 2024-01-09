@@ -8,7 +8,9 @@ import IceStorm
 
 import IceDrive
 import threading
+import time
 
+from threading import Timer
 from .blob import BlobService 
 from .blob import DataTransfer
 from .discovery import Discovery
@@ -27,19 +29,8 @@ class BlobAppPruebas(Ice.Application):
         properties = self.communicator().getProperties() #Obtenemos las propiedades del comunicador
         topic_name = properties.getProperty("Discovery") #Obtenemos el nombre del topic cuya clave es "TopicName"
 
-        #Ahora obtenemos el manejador de topics a traves de castear el proxy que nos devuelve el communicator con la clave "IceStorm.TopicManager.Proxy"
-        topic_manager = IceStorm.TopicManagerPrx.checkedCast(
-            self.communicator().propertyToProxy("IceStorm.TopicManager.Proxy")
-        )
-
-        #Intentamos obtener el topic con el nombre que hemos definido antes
-        try:
-            topic = topic_manager.retrieve(topic_name)
-        except IceStorm.NoSuchTopic:
-            topic = topic_manager.create(topic_name)
-
-        #Obtenemos el publisher que anuncia nuestro servicio castenado el topic que hemos obtenido a un topic del tipo Discovery
-        publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic.getPublisher())
+        #Obtenemos un topic del tipo Discovery para poder hacer nuestro anunciamiento de servicio porteriormente
+        topic = self.get_topic(topic_name)
 
         #Ahora vamos a crear un publicador de querys. Este va a ser el encargado de enviar las peticiones a las demas instancias BlobService
         query_pub = IceDrive.BlobQueryResponsePrx.uncheckedCast(topic.getPublisher())
@@ -48,18 +39,24 @@ class BlobAppPruebas(Ice.Application):
         query_receiver = BlobQuery(blob)
 
         #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
-        
         servant = BlobService([], query_pub)
         servant_blob_proxy = adapter.addWithUUID(servant)
         query_receiver_proxy = adapter.addWithUUID(query_receiver)
 
+        #ANUNCIAMIENTO DE NUESTRO SERVICIO#
+        #Obtenemos el publisher que anuncia nuestro servicio castenado el topic que hemos obtenido a un topic del tipo Discovery
+        publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic.getPublisher())
+        theread = threading.Thread(target = self.annouceProxy, args = (publisher, (IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy))))
+        theread.daemon = True 
+        theread.start()
+
+        #SUBSCRIPCION A LOS TOPICS DE DESCUBRIMIENTO
+        announce_subcriber = Discovery(servant_blob_proxy)
+        announce_subcriber_prxy = adapter.addWithUUID(announce_subcriber)
+        topic.subscribeAndGetPublisher({}, announce_subcriber_prxy)
+        
         #Parte de la subscripcion al topic
         topic.subscribeAndGetPublisher({}, query_receiver_proxy)
-
-        #Hacemos el que publisher anuncie el proxy de nuestro servicio
-        #publisher.announceBlobService(IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy))
-        #De esta manera en vez de anunciarlo solo una vez, lo estamos anunciando cada 5 segundos
-        threading.Timer(5.0, publisher.announceBlobService, (IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy),None)).start()
 
         #Vamos a crear un sirvitente de DataTransfer para poder realizar Upload()
         #archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba2.txt" #Archivo que vamos a subir
@@ -69,13 +66,34 @@ class BlobAppPruebas(Ice.Application):
         #servant_dt_proxy = adapter.addWithUUID(servant_datatransfer)
 
         #Proxys de los dos sirvientes
-        logging.info("Proxy BlobService: %s", servant_blob_proxy)
+        logging.info("\nProxy BlobService: %s", servant_blob_proxy)
         #logging.info("Proxy2 DataTransfer: %s", servant_dt_proxy)
 
         self.shutdownOnInterrupt()
         self.communicator().waitForShutdown()
 
         return 0
+
+    def get_topic(self, topic_name):
+        """Returns proxy for the TopicManager from IceStorm."""
+        topic_manager = IceStorm.TopicManagerPrx.checkedCast(
+            self.communicator().propertyToProxy("IceStorm.TopicManager.Proxy")
+        )
+        
+        try:
+            return topic_manager.retrieve(topic_name)
+        except IceStorm.NoSuchTopic: 
+            return topic_manager.create(topic_name)
+        
+    def annouceProxy(self, publisher, prx):
+        while True:
+            publisher.announceBlobService(
+                IceDrive.BlobServicePrx.checkedCast(prx),
+                None
+            )
+            time.sleep(5)
+
+
 
 #Cliente que me he creado para poder verificar el funcionamiento de los metodos
 class ClientAppPruebas(Ice.Application):
