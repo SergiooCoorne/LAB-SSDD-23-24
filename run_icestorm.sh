@@ -26,5 +26,5 @@ echo "Waiting for IceStorm to become available..."
 wait_icestorm
 
 echo "Creting topics..."
-create_topics "Discovery" "AuthenticationQuery" "DirectoryQuery" "BlobQuery"
-
+create_topics "discovery" "authentication" "directory" "blob"
+#create_topics "Discovery" "AuthenticationQuery" "DirectoryQuery" "BlobQuery"

@@ -27,7 +27,7 @@ class BlobAppPruebas(Ice.Application):
         adapter.activate()
 
         properties = self.communicator().getProperties() #Obtenemos las propiedades del comunicador
-        topic_name = properties.getProperty("Discovery") #Obtenemos el nombre del topic cuya clave es "TopicName"
+        topic_name = properties.getProperty("discovery") #Obtenemos el nombre del topic cuya clave es "TopicName"
 
         #Obtenemos un topic del tipo Discovery para poder hacer nuestro anunciamiento de servicio porteriormente
         topic = self.get_topic(topic_name)
@@ -46,7 +46,7 @@ class BlobAppPruebas(Ice.Application):
         #ANUNCIAMIENTO DE NUESTRO SERVICIO#
         #Obtenemos el publisher que anuncia nuestro servicio castenado el topic que hemos obtenido a un topic del tipo Discovery
         publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic.getPublisher())
-        theread = threading.Thread(target = self.annouceProxy, args = (publisher, (IceDrive.BlobServicePrx.checkedCast(servant_blob_proxy))))
+        theread = threading.Thread(target = self.annouceProxy, args = (publisher, (servant_blob_proxy)))
         theread.daemon = True 
         theread.start()
 
@@ -56,7 +56,7 @@ class BlobAppPruebas(Ice.Application):
         topic.subscribeAndGetPublisher({}, announce_subcriber_prxy)
         
         #Parte de la subscripcion al topic
-        topic.subscribeAndGetPublisher({}, query_receiver_proxy)
+        #topic.subscribeAndGetPublisher({}, query_receiver_proxy)
 
         #Vamos a crear un sirvitente de DataTransfer para poder realizar Upload()
         #archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba2.txt" #Archivo que vamos a subir
@@ -66,7 +66,7 @@ class BlobAppPruebas(Ice.Application):
         #servant_dt_proxy = adapter.addWithUUID(servant_datatransfer)
 
         #Proxys de los dos sirvientes
-        logging.info("\nProxy BlobService: %s", servant_blob_proxy)
+        logging.info("Proxy BlobService: %s\n", servant_blob_proxy)
         #logging.info("Proxy2 DataTransfer: %s", servant_dt_proxy)
 
         self.shutdownOnInterrupt()
