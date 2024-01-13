@@ -24,14 +24,18 @@ class BlobAppPruebas(Ice.Application):
         """Execute the code for the BlobApp class."""
         
         adapter = self.communicator().createObjectAdapter("BlobAdapter")
-        adapter.activate()
+
+        announce_subcriber = Discovery()
+        announce_subcriber_pr = adapter.addWithUUID(announce_subcriber)
+        announce_subcriber_prxy = IceDrive.DiscoveryPrx.uncheckedCast(announce_subcriber_pr)
 
         properties = self.communicator().getProperties() #Obtenemos las propiedades del comunicador
-        topic_name = properties.getProperty("discovery") #Obtenemos el nombre del topic cuya clave es "TopicName"
+        topic_name = properties.getProperty("Discovery.Topic") #Obtenemos el nombre del topic cuya clave es "TopicName"
 
         #Obtenemos un topic del tipo Discovery para poder hacer nuestro anunciamiento de servicio porteriormente
         topic = self.get_topic(topic_name)
 
+        #PARTE DE RESOLUCION DIFERIDA
         #Ahora vamos a crear un publicador de querys. Este va a ser el encargado de enviar las peticiones a las demas instancias BlobService
         query_pub = IceDrive.BlobQueryResponsePrx.uncheckedCast(topic.getPublisher())
         #Tambien creamos una instancia de la clase que va a recibir las peticiones de otros BlobServices
@@ -51,8 +55,6 @@ class BlobAppPruebas(Ice.Application):
         theread.start()
 
         #SUBSCRIPCION A LOS TOPICS DE DESCUBRIMIENTO
-        announce_subcriber = Discovery(servant_blob_proxy)
-        announce_subcriber_prxy = adapter.addWithUUID(announce_subcriber)
         topic.subscribeAndGetPublisher({}, announce_subcriber_prxy)
         
         #Parte de la subscripcion al topic
@@ -69,6 +71,7 @@ class BlobAppPruebas(Ice.Application):
         logging.info("Proxy BlobService: %s\n", servant_blob_proxy)
         #logging.info("Proxy2 DataTransfer: %s", servant_dt_proxy)
 
+        adapter.activate()
         self.shutdownOnInterrupt()
         self.communicator().waitForShutdown()
 
@@ -77,7 +80,7 @@ class BlobAppPruebas(Ice.Application):
     def get_topic(self, topic_name):
         """Returns proxy for the TopicManager from IceStorm."""
         topic_manager = IceStorm.TopicManagerPrx.checkedCast(
-            self.communicator().propertyToProxy("IceStorm.TopicManager.Proxy")
+            self.communicator().propertyToProxy("IceStorm.Proxy")
         )
         
         try:
@@ -91,6 +94,7 @@ class BlobAppPruebas(Ice.Application):
                 IceDrive.BlobServicePrx.checkedCast(prx),
                 None
             )
+            print("Anuncio enviado. Proxy: " + str(prx) + "\n")
             time.sleep(5)
 
 

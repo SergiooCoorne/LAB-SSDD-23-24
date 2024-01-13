@@ -1498,17 +1498,17 @@ if 'DiscoveryPrx' not in _M_IceDrive.__dict__:
         def end_announceAuthentication(self, _r):
             return _M_IceDrive.Discovery._op_announceAuthentication.end(self, _r)
 
-        def announceDirectoryServicey(self, prx, context=None):
-            return _M_IceDrive.Discovery._op_announceDirectoryServicey.invoke(self, ((prx, ), context))
+        def announceDirectoryService(self, prx, context=None):
+            return _M_IceDrive.Discovery._op_announceDirectoryService.invoke(self, ((prx, ), context))
 
-        def announceDirectoryServiceyAsync(self, prx, context=None):
-            return _M_IceDrive.Discovery._op_announceDirectoryServicey.invokeAsync(self, ((prx, ), context))
+        def announceDirectoryServiceAsync(self, prx, context=None):
+            return _M_IceDrive.Discovery._op_announceDirectoryService.invokeAsync(self, ((prx, ), context))
 
-        def begin_announceDirectoryServicey(self, prx, _response=None, _ex=None, _sent=None, context=None):
-            return _M_IceDrive.Discovery._op_announceDirectoryServicey.begin(self, ((prx, ), _response, _ex, _sent, context))
+        def begin_announceDirectoryService(self, prx, _response=None, _ex=None, _sent=None, context=None):
+            return _M_IceDrive.Discovery._op_announceDirectoryService.begin(self, ((prx, ), _response, _ex, _sent, context))
 
-        def end_announceDirectoryServicey(self, _r):
-            return _M_IceDrive.Discovery._op_announceDirectoryServicey.end(self, _r)
+        def end_announceDirectoryService(self, _r):
+            return _M_IceDrive.Discovery._op_announceDirectoryService.end(self, _r)
 
         def announceBlobService(self, prx, context=None):
             return _M_IceDrive.Discovery._op_announceBlobService.invoke(self, ((prx, ), context))
@@ -1554,8 +1554,8 @@ if 'DiscoveryPrx' not in _M_IceDrive.__dict__:
         def announceAuthentication(self, prx, current=None):
             raise NotImplementedError("servant method 'announceAuthentication' not implemented")
 
-        def announceDirectoryServicey(self, prx, current=None):
-            raise NotImplementedError("servant method 'announceDirectoryServicey' not implemented")
+        def announceDirectoryService(self, prx, current=None):
+            raise NotImplementedError("servant method 'announceDirectoryService' not implemented")
 
         def announceBlobService(self, prx, current=None):
             raise NotImplementedError("servant method 'announceBlobService' not implemented")
@@ -1569,7 +1569,7 @@ if 'DiscoveryPrx' not in _M_IceDrive.__dict__:
     Discovery._ice_type = _M_IceDrive._t_DiscoveryDisp
 
     Discovery._op_announceAuthentication = IcePy.Operation('announceAuthentication', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), _M_IceDrive._t_AuthenticationPrx, False, 0),), (), None, ())
-    Discovery._op_announceDirectoryServicey = IcePy.Operation('announceDirectoryServicey', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), _M_IceDrive._t_DirectoryServicePrx, False, 0),), (), None, ())
+    Discovery._op_announceDirectoryService = IcePy.Operation('announceDirectoryService', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), _M_IceDrive._t_DirectoryServicePrx, False, 0),), (), None, ())
     Discovery._op_announceBlobService = IcePy.Operation('announceBlobService', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), _M_IceDrive._t_BlobServicePrx, False, 0),), (), None, ())
 
     _M_IceDrive.Discovery = Discovery
