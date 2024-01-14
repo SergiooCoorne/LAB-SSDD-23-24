@@ -159,60 +159,85 @@ class BlobService(IceDrive.BlobService):
     ) -> str:
         """Register a DataTransfer object to upload a file to the service."""
 
-        #Leemos todo el contenido del archivo en bloques de 2 bytes
-        content = b''    
-        while True:
-            answer = blob.read(2) #El tamaño del bloque es ajustable a nuestro gusto
+        verify = False
+        #Usamos los proxys para comprobar que el usuario pertenece al servicio de Authentication
+        ramdon_proxy_authentication = self.discovery_instance.randomAuthentication()
+        if(ramdon_proxy_authentication != None):
+            proxy_authentication_prx = IceDrive.AuthenticationPrx.uncheckedCast(ramdon_proxy_authentication)
 
-            content += answer
-            if len(answer) == 0:
-                break
-        #Aplicamos close() despues de usar el DataTransfer
-        blob.close()
-                
-        blob_id = hashlib.sha256(content).hexdigest()
-        #Si el blob_id ya existe, solo tenemos que incrementar el numero de 
-        #veces que se ha vinculado
-        if blob_id_exists(blob_id, self.directory_files):
-            print("El archivo ya existe en el directorio.\n")
-            return blob_id
+        if(proxy_authentication_prx.verifyUser(user)):
+            veriy = True
 
-        #Si no existe el blob_id, creamos el archivo y lo añadimos al directorio
-        name_file_aletory = generate_name()
-        path = create_file(name_file_aletory, content, self.path_directory)
-                
-        #Escribimos en nuestro archivo que relaciona los blob_id con los archivos
-        try:
-            with open(self.directory_files, 'a') as f:
-                #path = os.path.abspath(f.name)
-                f.write(blob_id + " " + "0 " + path + "\n") #Añadimos el blob_id 
-                #al archivo junto con el numero de veces que se ha vinculado (0) y el nombre del archivo
-        except Exception as e:
-            print("Error: " + e.reason)
-            return None
-                
-        return blob_id #Devolvemos el blob_id
+        #Si el usuario está verificado
+        if(verify):
 
+            #Leemos todo el contenido del archivo en bloques de 2 bytes
+            content = b''    
+            while True:
+                answer = blob.read(2) #El tamaño del bloque es ajustable a nuestro gusto
+
+                content += answer
+                if len(answer) == 0:
+                    break
+            #Aplicamos close() despues de usar el DataTransfer
+            blob.close()
+                    
+            blob_id = hashlib.sha256(content).hexdigest()
+            #Si el blob_id ya existe, solo tenemos que incrementar el numero de 
+            #veces que se ha vinculado
+            if blob_id_exists(blob_id, self.directory_files):
+                print("El archivo ya existe en el directorio.\n")
+                return blob_id
+
+            #Si no existe el blob_id, creamos el archivo y lo añadimos al directorio
+            name_file_aletory = generate_name()
+            path = create_file(name_file_aletory, content, self.path_directory)
+                    
+            #Escribimos en nuestro archivo que relaciona los blob_id con los archivos
+            try:
+                with open(self.directory_files, 'a') as f:
+                    #path = os.path.abspath(f.name)
+                    f.write(blob_id + " " + "0 " + path + "\n") #Añadimos el blob_id 
+                    #al archivo junto con el numero de veces que se ha vinculado (0) y el nombre del archivo
+            except Exception as e:
+                print("Error: " + e.reason)
+                return None
+                    
+            return blob_id #Devolvemos el blob_id
+        else:
+            raise IceDrive.Unauthorized(f"El usuario no es un usuario autorizado.")
             
 
     def download(
         self, user: IceDrive.UserPrx, blob_id: str, current: Ice.Current = None
     ) -> IceDrive.DataTransferPrx:
         """Return a DataTransfer objet to enable the client to download the given blob_id."""
+    
+        verify = False
+        random_proxy_authetication = self.discovery_instance.randomAuthentication()
+        if(random_proxy_authetication != None):
+            proxy_authetication_prx = IceDrive.AuthenticationPrx.uncheckedCast(random_proxy_authetication)
 
-        #Comprobamos que el blob_id se encuentra en el directorio "directory_blobs_id" despues de verificar la untenticacion del usuario
-        with open(self.directory_files, 'r') as f:
-            for line in f:
-                parts = line.split()
-                if parts[0] == blob_id:                    
-                    file = parts[2]
-                    data_transfer = DataTransfer(file)
-                    prx = current.adapter.addWithUUID(data_transfer)
-                    prx_data_transfer = IceDrive.DataTransferPrx.uncheckedCast(prx)
-                    return prx_data_transfer
-                
-        # Si el blob_id no se encuentra en el directorio, lanzamos la excepción UnknownBlob
-        raise IceDrive.UnknownBlob(f"El blob_id no se encuentra en el directorio.")
+        if(proxy_authetication_prx.verifyUser(user)):
+            verify = True
+
+        if(verify):
+
+            #Comprobamos que el blob_id se encuentra en el directorio "directory_blobs_id" despues de verificar la untenticacion del usuario
+            with open(self.directory_files, 'r') as f:
+                for line in f:
+                    parts = line.split()
+                    if parts[0] == blob_id:                    
+                        file = parts[2]
+                        data_transfer = DataTransfer(file)
+                        prx = current.adapter.addWithUUID(data_transfer)
+                        prx_data_transfer = IceDrive.DataTransferPrx.uncheckedCast(prx)
+                        return prx_data_transfer
+                    
+            # Si el blob_id no se encuentra en el directorio, lanzamos la excepción UnknownBlob
+            raise IceDrive.UnknownBlob(f"El blob_id no se encuentra en el directorio.")
+        else:
+            IceDrive.Unauthorized(f"El usuario no es un usuario autorizado.")
 
     def print_proxy_authentication(self):
         """A random proxy of Authentication service"""
