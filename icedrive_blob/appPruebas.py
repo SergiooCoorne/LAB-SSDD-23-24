@@ -39,11 +39,11 @@ class BlobAppPruebas(Ice.Application):
         #Ahora vamos a crear un publicador de querys. Este va a ser el encargado de enviar las peticiones a las demas instancias BlobService
         query_pub = IceDrive.BlobQueryResponsePrx.uncheckedCast(topic.getPublisher())
         #Tambien creamos una instancia de la clase que va a recibir las peticiones de otros BlobServices
-        blob = BlobService([], query_pub)
-        query_receiver = BlobQuery(blob)
+        blob = BlobService(query_pub, announce_subcriber)
+        query_receiver = BlobQuery(blob) #Creamos nuestro receptor de peticiones pasandole una instancia de BlobService
 
         #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
-        servant = BlobService([], query_pub)
+        servant = BlobService(query_pub, announce_subcriber)
         servant_blob_proxy = adapter.addWithUUID(servant)
         query_receiver_proxy = adapter.addWithUUID(query_receiver)
 
@@ -57,8 +57,8 @@ class BlobAppPruebas(Ice.Application):
         #SUBSCRIPCION A LOS TOPICS DE DESCUBRIMIENTO
         topic.subscribeAndGetPublisher({}, announce_subcriber_prxy)
         
-        #Parte de la subscripcion al topic
-        #topic.subscribeAndGetPublisher({}, query_receiver_proxy)
+        #PARTE DE LA SUBSCRIPCION PARA RESOLUCION DIFERIDA
+        topic.subscribeAndGetPublisher({}, query_receiver_proxy)
 
         #Vamos a crear un sirvitente de DataTransfer para poder realizar Upload()
         #archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba2.txt" #Archivo que vamos a subir
@@ -97,6 +97,10 @@ class BlobAppPruebas(Ice.Application):
             print("Anuncio enviado. Proxy: " + str(prx) + "\n")
             time.sleep(5)
 
+    def proxyAuthentication(self, servant):
+        while True:
+            servant.print_proxy_authentication()
+            time.sleep(5)
 
 
 #Cliente que me he creado para poder verificar el funcionamiento de los metodos
