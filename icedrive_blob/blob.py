@@ -91,6 +91,8 @@ class BlobService(IceDrive.BlobService):
     
     def link(self, blob_id: str, current: Ice.Current = None) -> None:
         """Mark a blob_id file as linked in some directory."""
+        print("BlobService-Link by Sergio Cornejo\n") #Mensaje para verificar que se esta usando mi servicio en el cliente
+
         file_contents = [] #Lista donde vamos a ir guardando el contenido del archivo
 
         # Leemos el contenido del archivo y actualizamos la línea correspondiente
@@ -122,13 +124,15 @@ class BlobService(IceDrive.BlobService):
 
     def unlink(self, blob_id: str, current: Ice.Current = None) -> None:
         """"Mark a blob_id as unlinked (removed) from some directory."""
+        print("BlobService-Unlink by Sergio Cornejo\n") #Mensaje para verificar que se esta usando mi servicio en el cliente
+
         file_contents = []
         found = False
         # Leemos el contenido del archivo y actualizamos la línea correspondiente
         with open(self.directory_files, 'r') as f:
             for linea in f:
                 parts = linea.split()
-                if parts[0] == blob_id: #Si es el blob_id que buscamos, le restamos 1 
+                if len(parts) > 0 and parts[0] == blob_id: #Si es el blob_id que buscamos, le restamos 1 
                         #al numero de veces que se ha vinculado
                     found = True
                     filename = parts[2]
@@ -158,6 +162,7 @@ class BlobService(IceDrive.BlobService):
         self, user: IceDrive.UserPrx, blob: IceDrive.DataTransferPrx, current: Ice.Current = None
     ) -> str:
         """Register a DataTransfer object to upload a file to the service."""
+        print("BlobService-Upload by Sergio Cornejo\n") #Mensaje para verificar que se esta usando mi servicio en el cliente
 
         verify = False
         #Usamos los proxys para comprobar que el usuario pertenece al servicio de Authentication
@@ -166,10 +171,10 @@ class BlobService(IceDrive.BlobService):
             proxy_authentication_prx = IceDrive.AuthenticationPrx.uncheckedCast(ramdon_proxy_authentication)
 
         if(proxy_authentication_prx.verifyUser(user)):
-            veriy = True
+            verify = True
 
         #Si el usuario está verificado
-        if(verify):
+        if(verify == True):
 
             #Leemos todo el contenido del archivo en bloques de 2 bytes
             content = b''    
@@ -212,7 +217,8 @@ class BlobService(IceDrive.BlobService):
         self, user: IceDrive.UserPrx, blob_id: str, current: Ice.Current = None
     ) -> IceDrive.DataTransferPrx:
         """Return a DataTransfer objet to enable the client to download the given blob_id."""
-    
+        print("BlobService-Download by Sergio Cornejo\n") #Mensaje para verificar que se esta usando mi servicio en el cliente
+
         verify = False
         random_proxy_authetication = self.discovery_instance.randomAuthentication()
         if(random_proxy_authetication != None):
@@ -227,7 +233,7 @@ class BlobService(IceDrive.BlobService):
             with open(self.directory_files, 'r') as f:
                 for line in f:
                     parts = line.split()
-                    if parts[0] == blob_id:                    
+                    if len(parts) > 0 and parts[0] == blob_id:                    
                         file = parts[2]
                         data_transfer = DataTransfer(file)
                         prx = current.adapter.addWithUUID(data_transfer)
