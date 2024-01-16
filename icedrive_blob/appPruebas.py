@@ -30,18 +30,19 @@ class BlobAppPruebas(Ice.Application):
         announce_subcriber_prxy = IceDrive.DiscoveryPrx.uncheckedCast(announce_subcriber_pr)
 
         properties = self.communicator().getProperties() #Obtenemos las propiedades del comunicador
-        topic_name = properties.getProperty("Discovery.Topic") #Obtenemos el nombre del topic cuya clave es "TopicName"
+        topic_name_discovery = properties.getProperty("Discovery.Topic") #Obtenemos el nombre del topic cuya clave es "TopicName"
+        topic_name_blob = properties.getProperty("Blob.DeferredResolution.Topic") #Obtenemos el nombre del topic para la parte de resolucion diferida
 
         #Obtenemos un topic del tipo Discovery para poder hacer nuestro anunciamiento de servicio porteriormente
-        topic = self.get_topic(topic_name)
-
+        topic_discovery = self.get_topic(topic_name_discovery)
+        topic_blob = self.get_topic(topic_name_blob)
         #PARTE DE RESOLUCION DIFERIDA
         #Ahora vamos a crear un publicador de querys. Este va a ser el encargado de enviar las peticiones a las demas instancias BlobService
-        query_pub = IceDrive.BlobQueryResponsePrx.uncheckedCast(topic.getPublisher())
+        query_pub = IceDrive.BlobQueryPrx.uncheckedCast(topic_blob.getPublisher())
         #Tambien creamos una instancia de la clase que va a recibir las peticiones de otros BlobServices
         blob = BlobService(query_pub, announce_subcriber)
         query_receiver = BlobQuery(blob) #Creamos nuestro receptor de peticiones pasandole una instancia de BlobService
-
+        
         #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones
         servant = BlobService(query_pub, announce_subcriber)
         servant_blob_proxy = adapter.addWithUUID(servant)
@@ -49,16 +50,16 @@ class BlobAppPruebas(Ice.Application):
 
         #ANUNCIAMIENTO DE NUESTRO SERVICIO#
         #Obtenemos el publisher que anuncia nuestro servicio castenado el topic que hemos obtenido a un topic del tipo Discovery
-        publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic.getPublisher())
+        publisher = IceDrive.DiscoveryPrx.uncheckedCast(topic_discovery.getPublisher())
         theread = threading.Thread(target = self.annouceProxy, args = (publisher, (servant_blob_proxy)))
         theread.daemon = True 
         theread.start()
 
         #SUBSCRIPCION A LOS TOPICS DE DESCUBRIMIENTO
-        topic.subscribeAndGetPublisher({}, announce_subcriber_prxy)
+        topic_discovery.subscribeAndGetPublisher({}, announce_subcriber_prxy)
         
         #PARTE DE LA SUBSCRIPCION PARA RESOLUCION DIFERIDA
-        topic.subscribeAndGetPublisher({}, query_receiver_proxy)
+        topic_blob.subscribeAndGetPublisher({}, query_receiver_proxy)
 
         #Vamos a crear un sirvitente de DataTransfer para poder realizar Upload()
         #archivo = "/home/sergio/Escritorio/VSCodeLinux/LAB-SSDD-23-24/icedrive_blob/prueba2.txt" #Archivo que vamos a subir

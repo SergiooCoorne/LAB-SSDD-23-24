@@ -111,7 +111,7 @@ class BlobService(IceDrive.BlobService):
                     file_contents.append(line)
         #Si no se encuentra el blob_id en el directorio, lanzamos la excepcion UnknownBlob
         if not found:
-            raise IceDrive.UnknownBlob(f"El blob_id no se encuentra en el directorio.")
+            raise IceDrive.UnknownBlob(str(blob_id))
         
         # Escribimos el contenido actualizado de vuelta al archivo
         try:
@@ -147,7 +147,7 @@ class BlobService(IceDrive.BlobService):
                     file_contents.append(linea)
         #Si no se encuentra el blob_id en el directorio, lanzamos la excepcion UnknownBlob
         if not found:
-            raise IceDrive.UnknownBlob(f"El blob_id no se encuentra en el directorio.")
+            raise IceDrive.UnknownBlob(str(blob_id))
 
         # Escribimos el contenido actualizado de vuelta al archivo
         try:
@@ -210,7 +210,8 @@ class BlobService(IceDrive.BlobService):
                     
             return blob_id #Devolvemos el blob_id
         else:
-            raise IceDrive.Unauthorized(f"El usuario no es un usuario autorizado.")
+            username = user.getUsername()
+            raise IceDrive.Unauthorized(username)
             
 
     def download(
@@ -243,7 +244,8 @@ class BlobService(IceDrive.BlobService):
             # Si el blob_id no se encuentra en el directorio, lanzamos la excepción UnknownBlob
             raise IceDrive.UnknownBlob(f"El blob_id no se encuentra en el directorio.")
         else:
-            IceDrive.Unauthorized(f"El usuario no es un usuario autorizado.")
+            username = user.getUsername()
+            raise IceDrive.Unauthorized(username)
 
     def print_proxy_authentication(self):
         """A random proxy of Authentication service"""
