@@ -9,7 +9,8 @@ class Discovery(IceDrive.Discovery):
     """Servants class for service discovery."""
     def __init__(self):
         self.proxysAutentication = set()
-        
+        self.proxysBlob = set()
+
     def announceAuthentication(self, prx: IceDrive.AuthenticationPrx, current: Ice.Current = None) -> None:
         """Receive an Authentication service announcement."""
         print("Anuncio Authentication recibido. Proxy: " + str(prx) + "\n")
@@ -22,7 +23,12 @@ class Discovery(IceDrive.Discovery):
     def announceBlobService(self, prx: IceDrive.BlobServicePrx, current: Ice.Current = None) -> None:
         """Receive an Blob service announcement."""
         print("Anuncio Blob recibido. Proxy: " + str(prx) + "\n")
+        self.proxysBlob.add(prx)
 
     def randomAuthentication(self, current: Ice.Current = None) -> IceDrive.AuthenticationPrx:
         """Return a random Authentication service proxy."""
         return next(iter(self.proxysAutentication), None)
+    
+    def randomBlob(self, current: Ice.Current = None) -> IceDrive.BlobServicePrx:
+        """Return a random Authentication service proxy."""
+        return next(iter(self.proxysBlob), None)

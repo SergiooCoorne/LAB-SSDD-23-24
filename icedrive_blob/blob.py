@@ -93,70 +93,81 @@ class BlobService(IceDrive.BlobService):
         """Mark a blob_id file as linked in some directory."""
         print("BlobService-Link by Sergio Cornejo\n") #Mensaje para verificar que se esta usando mi servicio en el cliente
 
-        file_contents = [] #Lista donde vamos a ir guardando el contenido del archivo
-
-        # Leemos el contenido del archivo y actualizamos la línea correspondiente
-        found = False
-        with open(self.directory_files, 'r') as f:
-            for line in f:
-                parts = line.split()
-                if parts and len(parts) >= 2 and parts[0] == blob_id: #Si es el blob_id que buscamos, 
-                    #le sumamos 1 al numero de veces que se ha vinculado
-                    found = True
-                    links = int(parts[1]) + 1
-                    filename = parts[2]
-                    nueva_linea = parts[0] + " " + str(links) + " " + filename + "\n"
-                    file_contents.append(nueva_linea)
-                else: #Si no es el blob_id que buscamos, lo añadimos tal cual al archivo
-                    file_contents.append(line)
-        #Si no se encuentra el blob_id en el directorio, lanzamos la excepcion UnknownBlob
-        if not found:
-            raise IceDrive.UnknownBlob(str(blob_id))
-        
-        # Escribimos el contenido actualizado de vuelta al archivo
         try:
-            with open(self.directory_files, 'w') as f:
-                for linea in file_contents:
-                    f.write(linea)
-        except Exception as e:
-            print("Error: " + e.reason)
-            return None
+            file_contents = [] #Lista donde vamos a ir guardando el contenido del archivo
+
+            # Leemos el contenido del archivo y actualizamos la línea correspondiente
+            found = False
+            with open(self.directory_files, 'r') as f:
+                for line in f:
+                    parts = line.split()
+                    if parts and len(parts) >= 2 and parts[0] == blob_id: #Si es el blob_id que buscamos, 
+                        #le sumamos 1 al numero de veces que se ha vinculado
+                        found = True
+                        links = int(parts[1]) + 1
+                        filename = parts[2]
+                        nueva_linea = parts[0] + " " + str(links) + " " + filename + "\n"
+                        file_contents.append(nueva_linea)
+                    else: #Si no es el blob_id que buscamos, lo añadimos tal cual al archivo
+                        file_contents.append(line)
+            #Si no se encuentra el blob_id en el directorio, lanzamos la excepcion UnknownBlob
+            if not found:
+                raise IceDrive.UnknownBlob(str(blob_id))
+            
+            # Escribimos el contenido actualizado de vuelta al archivo
+            try:
+                with open(self.directory_files, 'w') as f:
+                    for linea in file_contents:
+                        f.write(linea)
+            except Exception as e:
+                print("Error: " + e.reason)
+                return None
+            
+        except IceDrive.UnknownBlob:
+            query_response_prx = self.prepare_callback(current)
+            self.query_publisher.linkBlob(blob_id, query_response_prx)
 
     def unlink(self, blob_id: str, current: Ice.Current = None) -> None:
         """"Mark a blob_id as unlinked (removed) from some directory."""
         print("BlobService-Unlink by Sergio Cornejo\n") #Mensaje para verificar que se esta usando mi servicio en el cliente
 
-        file_contents = []
-        found = False
-        # Leemos el contenido del archivo y actualizamos la línea correspondiente
-        with open(self.directory_files, 'r') as f:
-            for linea in f:
-                parts = linea.split()
-                if len(parts) > 0 and parts[0] == blob_id: #Si es el blob_id que buscamos, le restamos 1 
-                        #al numero de veces que se ha vinculado
-                    found = True
-                    filename = parts[2]
-                    links = int(parts[1]) - 1
-                    if links <= 0: #Si el numero de veces asociado es 0, 
-                            #o menor que 0, se elimina el archivo del sistema de archivos
-                        find_and_delete_file(filename) #Borramos el archivo del sistema de archivos
-                    else:                            
-                        new_line = parts[0] + " " + str(links) + " " + filename +"\n"
-                        file_contents.append(new_line)
-                else:
-                    file_contents.append(linea)
-        #Si no se encuentra el blob_id en el directorio, lanzamos la excepcion UnknownBlob
-        if not found:
-            raise IceDrive.UnknownBlob(str(blob_id))
-
-        # Escribimos el contenido actualizado de vuelta al archivo
         try:
-            with open(self.directory_files, 'w') as f:
-                for linea in file_contents:
-                    f.write(linea)
-        except Exception as e:
-            print("Error: " + e.reason)
-            return None
+            file_contents = []
+            found = False
+            # Leemos el contenido del archivo y actualizamos la línea correspondiente
+            with open(self.directory_files, 'r') as f:
+                for linea in f:
+                    parts = linea.split()
+                    if len(parts) > 0 and parts[0] == blob_id: #Si es el blob_id que buscamos, le restamos 1 
+                            #al numero de veces que se ha vinculado
+                        found = True
+                        filename = parts[2]
+                        links = int(parts[1]) - 1
+                        if links <= 0: #Si el numero de veces asociado es 0, 
+                                #o menor que 0, se elimina el archivo del sistema de archivos
+                            find_and_delete_file(filename) #Borramos el archivo del sistema de archivos
+                        else:                            
+                            new_line = parts[0] + " " + str(links) + " " + filename +"\n"
+                            file_contents.append(new_line)
+                    else:
+                        file_contents.append(linea)
+            #Si no se encuentra el blob_id en el directorio, lanzamos la excepcion UnknownBlob
+            if not found:
+                raise IceDrive.UnknownBlob(str(blob_id))
+
+            # Escribimos el contenido actualizado de vuelta al archivo
+            try:
+                with open(self.directory_files, 'w') as f:
+                    for linea in file_contents:
+                        f.write(linea)
+            except Exception as e:
+                print("Error: " + e.reason)
+                return None
+            
+        except IceDrive.UnknownBlob:
+            query_response_prx = self.prepare_callback(current)
+            self.query_publisher.unlinkBlob(blob_id, query_response_prx)
+
 
     def upload(
         self, user: IceDrive.UserPrx, blob: IceDrive.DataTransferPrx, current: Ice.Current = None
@@ -220,40 +231,44 @@ class BlobService(IceDrive.BlobService):
         """Return a DataTransfer objet to enable the client to download the given blob_id."""
         print("BlobService-Download by Sergio Cornejo\n") #Mensaje para verificar que se esta usando mi servicio en el cliente
 
-        verify = False
-        random_proxy_authetication = self.discovery_instance.randomAuthentication()
-        if(random_proxy_authetication != None):
-            proxy_authetication_prx = IceDrive.AuthenticationPrx.uncheckedCast(random_proxy_authetication)
+        try:
+            verify = False
+            random_proxy_authetication = self.discovery_instance.randomAuthentication()
+            if(random_proxy_authetication != None):
+                proxy_authetication_prx = IceDrive.AuthenticationPrx.uncheckedCast(random_proxy_authetication)
 
-        if(proxy_authetication_prx.verifyUser(user)):
-            verify = True
+            if(proxy_authetication_prx.verifyUser(user)):
+                verify = True
 
-        if(verify):
+            if(verify):
 
-            #Comprobamos que el blob_id se encuentra en el directorio "directory_blobs_id" despues de verificar la untenticacion del usuario
-            with open(self.directory_files, 'r') as f:
-                for line in f:
-                    parts = line.split()
-                    if len(parts) > 0 and parts[0] == blob_id:                    
-                        file = parts[2]
-                        data_transfer = DataTransfer(file)
-                        prx = current.adapter.addWithUUID(data_transfer)
-                        prx_data_transfer = IceDrive.DataTransferPrx.uncheckedCast(prx)
-                        return prx_data_transfer
-                    
-            # Si el blob_id no se encuentra en el directorio, lanzamos la excepción UnknownBlob
-            raise IceDrive.UnknownBlob(f"El blob_id no se encuentra en el directorio.")
-        else:
-            username = user.getUsername()
-            raise IceDrive.Unauthorized(username)
+                #Comprobamos que el blob_id se encuentra en el directorio "directory_blobs_id" despues de verificar la untenticacion del usuario
+                with open(self.directory_files, 'r') as f:
+                    for line in f:
+                        parts = line.split()
+                        if len(parts) > 0 and parts[0] == blob_id:                    
+                            file = parts[2]
+                            data_transfer = DataTransfer(file)
+                            prx = current.adapter.addWithUUID(data_transfer)
+                            prx_data_transfer = IceDrive.DataTransferPrx.uncheckedCast(prx)
+                            return prx_data_transfer
+                        
+                    # Si el blob_id no se encuentra en el directorio, lanzamos la excepción UnknownBlob
+                    raise IceDrive.UnknownBlob(str(blob_id))
+            else:
+                username = user.getUsername()
+                raise IceDrive.Unauthorized(username)
+            
+        except IceDrive.UnknownBlob:
+            query_response_prx = self.prepare_callback(current)
+            self.query_publisher.downloadBlob(blob_id, query_response_prx)
+            return self.expected_responses[query_response_prx.ice_getIdentity()]
 
     def print_proxy_authentication(self):
         """A random proxy of Authentication service"""
         proxy = self.discovery_instance.randomAuthentication()
         print("Proxy Athentication: " + str(proxy) + "\n")
              
-
-
 def generate_name():
     letras = string.ascii_lowercase
     longitud = random.randint(5, 10)

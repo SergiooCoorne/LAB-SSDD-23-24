@@ -40,7 +40,7 @@ class BlobAppPruebas(Ice.Application):
         #Ahora vamos a crear un publicador de querys. Este va a ser el encargado de enviar las peticiones a las demas instancias BlobService
         query_pub = IceDrive.BlobQueryPrx.uncheckedCast(topic_blob.getPublisher())
         #Tambien creamos una instancia de la clase que va a recibir las peticiones de otros BlobServices
-        blob = BlobService(query_pub, announce_subcriber)
+        blob = BlobService(None, announce_subcriber)
         query_receiver = BlobQuery(blob) #Creamos nuestro receptor de peticiones pasandole una instancia de BlobService
         
         #Vamos a crear un sirvitente de BlobService para poder realizar las operaciones

@@ -16,29 +16,30 @@ class BlobQueryResponse(IceDrive.BlobQueryResponse):
 
     def blobExists(self, current: Ice.Current = None) -> None:
         """Indicate that `blob_id` was recognised by other service instance."""
-        print("Blob_id presente en otro instancia BlobService\n")
+        self.future.done() #Devuelve True si la invocacion se ha completado
 
     def blobLinked(self, current: Ice.Current = None) -> None:
         """Indicate that `blob_id` was recognised by other service instance and was linked."""
-        print("Blob_id reconocido y enlazado\n")
+        self.future.done() #Devuelve True si la invocacion se ha completado
 
     def blobUnlinked(self, current: Ice.Current = None) -> None:
         """Indicate that `blob_id` was recognised by other service instance and was unlinked."""
-        print("Blob_id reconocido y desenlazado\n")
+        self.future.done() #Devuelve True si la invocacion se ha completado
 
 class BlobQuery(IceDrive.BlobQuery):
     """Query receiver."""
     def __init__(self, blob_service):
         """" Receive a BlobServicePrx. This proxy will be used to download, link, or unlink the file"""
         self.blob_service = blob_service
+        #self.discovery_instance = discovery_instance
 
     def downloadBlob(self, blob_id: str, response: IceDrive.BlobQueryResponsePrx, current: Ice.Current = None) -> None:
         """Receive a query for downloading an archive based on `blob_id`."""
         try:
-            data_transfer_prx = self.blob_service.donwload(blob_id)
+            data_transfer_prx = self.blob_service.download(None, blob_id)
             response.downloadBlob(data_transfer_prx)
         except IceDrive.UnknownBlob:
-            print("Blob_id no encontrado\n")
+            pass
 
     def blobIdExists(self, blob_id: str, reponse: IceDrive.BlobQueryResponsePrx, current: Ice.Current = None) -> None:
         "Receive a query to check if `blob_id` archive exists."
@@ -47,7 +48,7 @@ class BlobQuery(IceDrive.BlobQuery):
                 reponse.blobExists()
             #Si no existe, no hacemos nada ya que cuando pasen 5 segundos el otro servicio procedera a hacer la subida del Blob
         except:
-            print("Blob_id no encontrado\n")
+            pass
 
     def linkBlob(self, blob_id: str, response: IceDrive.BlobQueryResponsePrx, current: Ice.Current = None) -> None:
         """Receive a query to create a link for `blob_id` archive if it exists."""
@@ -55,7 +56,7 @@ class BlobQuery(IceDrive.BlobQuery):
             self.blob_service.link(blob_id)
             response.blobLinked()
         except IceDrive.UnknownBlob:
-            print("Blob_id no encontrado\n")
+            pass
 
 
     def unlinkBlob(self, blob_id: str, response: IceDrive.BlobQueryResponsePrx, current: Ice.Current = None) -> None:
@@ -64,7 +65,7 @@ class BlobQuery(IceDrive.BlobQuery):
             self.blob_service.unlink(blob_id)
             response.blobUnlinked()
         except IceDrive.UnknownBlob:
-            print("Blod_id no encontrado\n")
+            pass
 
 def blob_id_exists(blob_id: str, directory_files: str) -> bool:
     """Check if the given blob_id already exists in the file."""
