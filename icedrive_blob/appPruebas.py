@@ -95,7 +95,7 @@ class BlobAppPruebas(Ice.Application):
                 IceDrive.BlobServicePrx.checkedCast(prx),
                 None
             )
-            print("Anuncio enviado. Proxy: " + str(prx) + "\n")
+            #print("Anuncio enviado. Proxy: " + str(prx) + "\n")
             time.sleep(5)
 
     def proxyAuthentication(self, servant):
