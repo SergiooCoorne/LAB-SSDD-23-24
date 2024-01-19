@@ -130,7 +130,8 @@ class BlobService(IceDrive.BlobService):
             #Esperamos 5 segundos para ver si hemos obtenido respuesta de alguna instancia de BlobService
             time.sleep(5)
             #Comprobamos ahora si hemos obtenido respuesta
-            if(self.expected_responses[query_response_prx.ice_getIdentity()] is None):
+            identity = query_response_prx.ice_getIdentity()
+            if(identity not in self.expected_responses or self.expected_responses[identity] is None):
                 raise IceDrive.UnknownBlob(str(blob_id))
 
     def unlink(self, blob_id: str, current: Ice.Current = None) -> None:
@@ -176,7 +177,8 @@ class BlobService(IceDrive.BlobService):
             #Esperamos 5 segundos para ver si hemos obtenido respuesta de alguna instancia de BlobService
             time.sleep(5)
             #Comprobamos ahora si hemos obtenido respuesta
-            if(self.expected_responses[query_response_prx.ice_getIdentity()] is None):
+            identity = query_response_prx.ice_getIdentity()
+            if(identity not in self.expected_responses or self.expected_responses[identity] is None):
                 raise IceDrive.UnknownBlob(str(blob_id))
 
 
@@ -195,7 +197,7 @@ class BlobService(IceDrive.BlobService):
             #Si no tenemos ningun proxy de Authentication activo
             raise IceDrive.TemporaryUnavailable(f"BlobService")
 
-        if(proxy_authentication_prx.verifyUser(user) and user.isAlive()):
+        if(proxy_authentication_prx.verifyUser(user)):
             verify = True
 
         #Si el usuario está verificado
@@ -222,7 +224,8 @@ class BlobService(IceDrive.BlobService):
             #Esperamos 5 segundos para ver si recibimos respuesta, y si no recibimos, procedemos a comprobar si esta en nuestra persistencia, y actuar en consecuencia
             time.sleep(5)
             #Comprobamos si el objeto Ice.Future es True
-            if(self.expected_responses[query_response_prx.ice_getIdentity()]):
+            identity = query_response_prx.ice_getIdentity()
+            if(identity in self.expected_responses and self.expected_responses[identity] is True):
                 #Si el objeto es True, significa que ya existe el BlobID en algun BlobService y no hay que subir el archivo
                 return blob_id
             
@@ -241,15 +244,10 @@ class BlobService(IceDrive.BlobService):
                     #path = os.path.abspath(f.name)
                     f.write(blob_id + " " + "0 " + path + "\n") #Añadimos el blob_id 
                     #al archivo junto con el numero de veces que se ha vinculado (0) y el nombre del archivo
+                    return blob_id
             except Exception as e:
                 print("Error: " + e.reason)
                 return None
-
-            #Volvemos a comprohar el el user sigue siendo valido antes de devolver el BlobId de la subida 
-            if(user.isAlive()):
-                return blob_id #Devolvemos el blob_id
-            else:
-                raise IceDrive.Unauthorized(username)   
         else:
             username = user.getUsername()
             raise IceDrive.Unauthorized(username)
@@ -270,7 +268,7 @@ class BlobService(IceDrive.BlobService):
                 #Si no tenemos ningun proxy de Authentication activo
                 raise IceDrive.TemporaryUnavailable(f"BlobService")
 
-            if(proxy_authetication_prx.verifyUser(user) and user.isAlive()):
+            if(proxy_authetication_prx.verifyUser(user)):
                 verify = True
 
             if(verify):
@@ -284,12 +282,7 @@ class BlobService(IceDrive.BlobService):
                             data_transfer = DataTransfer(file)
                             prx = current.adapter.addWithUUID(data_transfer)
                             prx_data_transfer = IceDrive.DataTransferPrx.uncheckedCast(prx)
-                            
-                            #Volvemos a comprobar que el usuario sigue siendo valido antes de enviar el resultado
-                            if(user.isAlive()):
-                                return prx_data_transfer
-                            else:
-                                raise IceDrive.Unauthorized(username) 
+                            return prx_data_transfer
                         else:
                             # Si el blob_id no se encuentra en el directorio, lanzamos la excepción UnknownBlob
                             raise IceDrive.UnknownBlob(str(blob_id))
@@ -304,7 +297,7 @@ class BlobService(IceDrive.BlobService):
             time.sleep(5)
             #Si no recibimos respuesta lanzamos la excepcion coorrespondiente
             identity = query_response_prx.ice_getIdentity()
-            if(self.expected_responses[identity] is None):
+            if(identity not in self.expected_responses or self.expected_responses[identity] is None):
                 raise IceDrive.UnknownBlob(str(blob_id))
             #Si hemos recibido respuesta, la devolvemos al usuario
             return self.expected_responses[query_response_prx.ice_getIdentity()]

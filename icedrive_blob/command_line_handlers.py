@@ -2,8 +2,9 @@
 
 import sys
 
-from .appPruebas import BlobAppPruebas, ClientAppPruebas
 from .app import BlobApp
+from .appE1 import BlobAppPruebas
+from .clientE1 import ClientAppPruebas
 
 def client() -> int:
 
@@ -13,5 +14,5 @@ def client() -> int:
 
 def server() -> int:
 
-    app = BlobAppPruebas()
+    app = BlobApp()
     return app.main(sys.argv)
